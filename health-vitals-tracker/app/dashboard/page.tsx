@@ -14,7 +14,12 @@ import DailyRecommendations from '@/components/dashboard/DailyRecommendations';
 import Navigation from '@/components/Navigation';
 
 const getTodayDate = () => {
-  return new Date().toISOString().split('T')[0];
+  // Use local timezone instead of UTC to avoid date mismatches
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 const defaultActivity: ActivityData = {
@@ -40,7 +45,7 @@ const defaultHealth: HealthInputs = {
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
-  const [date, setDate] = useState(getTodayDate());
+  const [date, setDate] = useState<string>(() => getTodayDate());
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
   const [activity, setActivity] = useState<ActivityData>(defaultActivity);
   const [health, setHealth] = useState<HealthInputs>(defaultHealth);
@@ -58,6 +63,17 @@ export default function DashboardPage() {
   const qualityAbortControllerRef = useRef<AbortController | null>(null);
   const lastQualityCalculationRef = useRef<string>('');
   const savingRef = useRef(false);
+  const hasInitializedRef = useRef(false);
+
+  // Ensure date is set to today on initial load/reload (only once per session)
+  useEffect(() => {
+    if (user && !authLoading && !hasInitializedRef.current) {
+      const today = getTodayDate();
+      setDate(today);
+      hasInitializedRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading]);
 
   useEffect(() => {
     if (user && !authLoading) {
