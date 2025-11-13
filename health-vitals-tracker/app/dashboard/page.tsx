@@ -47,7 +47,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | null>(null);
+  const [calculatingQuality, setCalculatingQuality] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const qualityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const savingRef = useRef(false);
 
   useEffect(() => {
@@ -79,6 +81,55 @@ export default function DashboardPage() {
     }
   };
 
+  const navigateDate = (days: number) => {
+    const currentDate = new Date(date);
+    currentDate.setDate(currentDate.getDate() + days);
+    const newDate = currentDate.toISOString().split('T')[0];
+    setDate(newDate);
+  };
+
+  const goToPreviousDay = () => navigateDate(-1);
+  const goToNextDay = () => navigateDate(1);
+  const goToToday = () => setDate(getTodayDate());
+
+  const calculateFoodQuality = async (logs: FoodLog[]) => {
+    try {
+      setCalculatingQuality(true);
+      const response = await fetch('/api/calculate-food-quality', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ foodLogs: logs }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        // If rate limited, don't show error - just keep existing score
+        if (response.status === 429) {
+          console.warn('Food quality calculation rate limited. Will retry later.');
+          return;
+        }
+        
+        throw new Error(errorData.error || 'Failed to calculate food quality');
+      }
+
+      const data = await response.json();
+      if (data.score) {
+        setHealth(prev => ({
+          ...prev,
+          foodQualityScore: data.score,
+        }));
+      }
+    } catch (error) {
+      console.error('Error calculating food quality:', error);
+      // Keep existing score on error - don't show alert to avoid annoying user
+    } finally {
+      setCalculatingQuality(false);
+    }
+  };
+
   const handleSave = async (showNotification = true) => {
     if (!user) return;
 
@@ -87,11 +138,40 @@ export default function DashboardPage() {
     setSaveStatus('saving');
     try {
       const metrics = calculateMetrics(foodLogs, activity);
+      
+      // Clean foodLogs to remove empty arrays and undefined customFoods
+      const cleanedFoodLogs = foodLogs
+        .filter(log => log.customFoods && log.customFoods.length > 0)
+        .map(log => {
+          // Clean each custom food to remove undefined values
+          const cleanedCustomFoods = log.customFoods!.map(food => {
+            const cleaned: any = {
+              id: food.id,
+              name: food.name,
+              calories: food.calories,
+              isCustom: true,
+            };
+            if (food.amount !== undefined && food.amount !== null) {
+              cleaned.amount = food.amount;
+            }
+            if (food.unit !== undefined && food.unit !== null && food.unit !== '') {
+              cleaned.unit = food.unit;
+            }
+            return cleaned;
+          });
+          
+          return {
+            mealType: log.mealType,
+            selectedFoods: [], // Always empty now since we only use custom foods
+            customFoods: cleanedCustomFoods,
+          };
+        });
+
       const entry: DailyEntry = {
         id: `${user.uid}_${date}`,
         userId: user.uid,
         date,
-        foodLogs,
+        foodLogs: cleanedFoodLogs,
         activity,
         health,
         metrics,
@@ -116,6 +196,36 @@ export default function DashboardPage() {
     }
   };
 
+  // Auto-calculate food quality when food logs change (with debounce)
+  useEffect(() => {
+    if (!user || loading) return;
+
+    // Clear existing timeout
+    if (qualityTimeoutRef.current) {
+      clearTimeout(qualityTimeoutRef.current);
+    }
+
+    // Set new timeout for quality calculation (5 seconds after last change to reduce API calls)
+    qualityTimeoutRef.current = setTimeout(() => {
+      if (foodLogs.length > 0) {
+        calculateFoodQuality(foodLogs);
+      } else {
+        // No foods, reset to default
+        setHealth(prev => ({
+          ...prev,
+          foodQualityScore: 3,
+        }));
+      }
+    }, 5000);
+
+    return () => {
+      if (qualityTimeoutRef.current) {
+        clearTimeout(qualityTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foodLogs]);
+
   // Auto-save when data changes (with debounce)
   useEffect(() => {
     if (!user || loading) return;
@@ -135,11 +245,40 @@ export default function DashboardPage() {
         setSaveStatus('saving');
         try {
           const metrics = calculateMetrics(foodLogs, activity);
+          
+          // Clean foodLogs to remove empty arrays and undefined customFoods
+          const cleanedFoodLogs = foodLogs
+            .filter(log => log.customFoods && log.customFoods.length > 0)
+            .map(log => {
+              // Clean each custom food to remove undefined values
+              const cleanedCustomFoods = log.customFoods!.map(food => {
+                const cleaned: any = {
+                  id: food.id,
+                  name: food.name,
+                  calories: food.calories,
+                  isCustom: true,
+                };
+                if (food.amount !== undefined && food.amount !== null) {
+                  cleaned.amount = food.amount;
+                }
+                if (food.unit !== undefined && food.unit !== null && food.unit !== '') {
+                  cleaned.unit = food.unit;
+                }
+                return cleaned;
+              });
+              
+              return {
+                mealType: log.mealType,
+                selectedFoods: [], // Always empty now since we only use custom foods
+                customFoods: cleanedCustomFoods,
+              };
+            });
+
           const entry: DailyEntry = {
             id: `${currentUserId}_${date}`,
             userId: currentUserId,
             date,
-            foodLogs,
+            foodLogs: cleanedFoodLogs,
             activity,
             health,
             metrics,
@@ -196,14 +335,47 @@ export default function DashboardPage() {
               <p className="mt-2 text-base text-gray-600">Monitor your daily nutrition, activity, and wellness metrics</p>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Date:</label>
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-                />
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={goToPreviousDay}
+                    className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                    title="Previous day"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={goToNextDay}
+                    disabled={date >= getTodayDate()}
+                    className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Next day"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                  {date !== getTodayDate() && (
+                    <button
+                      type="button"
+                      onClick={goToToday}
+                      className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                      title="Go to today"
+                    >
+                      Today
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 {saveStatus === 'saving' && (
@@ -237,7 +409,11 @@ export default function DashboardPage() {
         <div className="space-y-8">
           <DailyFoodLog foodLogs={foodLogs} onUpdate={setFoodLogs} />
           <ActivityEntry activity={activity} onUpdate={setActivity} />
-          <HealthInputsComponent health={health} onUpdate={setHealth} />
+          <HealthInputsComponent 
+            health={health} 
+            onUpdate={setHealth} 
+            calculatingQuality={calculatingQuality}
+          />
           <MetricsDisplay metrics={metrics} />
         </div>
       </div>

@@ -16,17 +16,50 @@ const COLLECTIONS = {
   users: 'users',
 } as const;
 
+// Recursively remove undefined values from an object
+function removeUndefined(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return null;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeUndefined(item));
+  }
+  
+  if (typeof obj === 'object' && obj.constructor === Object) {
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (value !== undefined) {
+        cleaned[key] = removeUndefined(value);
+      }
+    }
+    return cleaned;
+  }
+  
+  return obj;
+}
+
 // Save or update daily entry
 export async function saveDailyEntry(entry: DailyEntry): Promise<void> {
   const entryRef = doc(db, COLLECTIONS.entries, entry.id || `${entry.userId}_${entry.date}`);
   
-  const entryData = {
-    ...entry,
-    createdAt: entry.createdAt || Timestamp.now(),
+  // Prepare entry data with proper timestamp conversion
+  const entryData: any = {
+    id: entry.id || `${entry.userId}_${entry.date}`,
+    userId: entry.userId,
+    date: entry.date,
+    foodLogs: entry.foodLogs || [],
+    activity: entry.activity,
+    health: entry.health,
+    metrics: entry.metrics,
+    createdAt: entry.createdAt ? Timestamp.fromDate(entry.createdAt) : Timestamp.now(),
     updatedAt: Timestamp.now(),
   };
 
-  await setDoc(entryRef, entryData, { merge: true });
+  // Remove all undefined values recursively
+  const cleanEntry = removeUndefined(entryData);
+
+  await setDoc(entryRef, cleanEntry, { merge: true });
 }
 
 // Get daily entry for a specific date

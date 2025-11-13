@@ -5,9 +5,10 @@ import { HealthInputs } from '@/types';
 interface HealthInputsProps {
   health: HealthInputs;
   onUpdate: (health: HealthInputs) => void;
+  calculatingQuality?: boolean;
 }
 
-export default function HealthInputsComponent({ health, onUpdate }: HealthInputsProps) {
+export default function HealthInputsComponent({ health, onUpdate, calculatingQuality = false }: HealthInputsProps) {
   const updateField = <K extends keyof HealthInputs>(
     field: K,
     value: HealthInputs[K]
@@ -92,16 +93,26 @@ export default function HealthInputsComponent({ health, onUpdate }: HealthInputs
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Food Quality Score (1-5)
+            <span className="ml-2 text-xs font-normal text-gray-500">(AI Calculated)</span>
           </label>
-          <input
-            type="number"
-            value={health.foodQualityScore || ''}
-            onChange={(e) => updateField('foodQualityScore', Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-            placeholder="0"
-            min="1"
-            max="5"
-          />
+          <div className="relative">
+            <input
+              type="number"
+              value={health.foodQualityScore || ''}
+              readOnly
+              className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm transition-all cursor-not-allowed"
+              min="1"
+              max="5"
+            />
+            {calculatingQuality && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+              </div>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Score is automatically calculated based on your logged foods
+          </p>
         </div>
 
         <div>

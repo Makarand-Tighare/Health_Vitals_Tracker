@@ -86,6 +86,18 @@ service cloud.firestore {
 
    You can find these values in Firebase Console → Project Settings → General → Your apps
 
+4. (Optional) Add Google Gemini API key for AI calorie estimation:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+   This enables AI-powered calorie estimation for custom foods. If not provided, the app will use a fallback estimation method.
+   
+   To get a Gemini API key:
+   - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Sign in with your Google account
+   - Click "Create API Key"
+   - Copy the key and add it to `.env.local`
+
 5. Run the development server:
    ```bash
    npm run dev

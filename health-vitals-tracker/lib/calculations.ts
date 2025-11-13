@@ -5,7 +5,12 @@ import { calculateTotalCalories } from './foodDatabase';
 export function calculateTotalIntake(foodLogs: FoodLog[]): number {
   let total = 0;
   foodLogs.forEach(log => {
-    total += calculateTotalCalories(log.selectedFoods);
+    // Add calories from custom foods (AI estimated)
+    if (log.customFoods) {
+      log.customFoods.forEach(food => {
+        total += food.calories;
+      });
+    }
   });
   return total;
 }

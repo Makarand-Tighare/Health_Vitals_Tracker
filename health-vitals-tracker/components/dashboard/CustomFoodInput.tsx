@@ -1,0 +1,163 @@
+'use client';
+
+import { useState } from 'react';
+import { CustomFood } from '@/types';
+
+interface CustomFoodInputProps {
+  onAdd: (food: CustomFood) => void;
+  mealType: string;
+}
+
+export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProps) {
+  const [foodName, setFoodName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [unit, setUnit] = useState('serving');
+  const [isEstimating, setIsEstimating] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
+  const handleEstimate = async () => {
+    if (!foodName.trim()) return;
+
+    setIsEstimating(true);
+    try {
+      const response = await fetch('/api/estimate-calories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          foodName: foodName.trim(),
+          amount: amount ? parseFloat(amount) : undefined,
+          unit: unit,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to estimate calories');
+      }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (!data.calories || isNaN(data.calories)) {
+        throw new Error('Invalid calorie estimate received');
+      }
+
+      const customFood: CustomFood = {
+        id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: foodName.trim(),
+        calories: Math.round(data.calories),
+        amount: amount ? parseFloat(amount) : undefined,
+        unit: unit,
+        isCustom: true,
+      };
+
+      onAdd(customFood);
+      setFoodName('');
+      setAmount('');
+      setUnit('serving');
+      setShowForm(false);
+    } catch (error: any) {
+      console.error('Error estimating calories:', error);
+      alert(error.message || 'Failed to estimate calories. Please check your GEMINI_API_KEY configuration.');
+    } finally {
+      setIsEstimating(false);
+    }
+  };
+
+  if (!showForm) {
+    return (
+      <button
+        type="button"
+        onClick={() => setShowForm(true)}
+        className="mt-3 w-full rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-blue-400 hover:bg-blue-50"
+      >
+        + Add Custom Food
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+            Food Name
+          </label>
+          <input
+            type="text"
+            value={foodName}
+            onChange={(e) => setFoodName(e.target.value)}
+            placeholder="e.g., Grilled Chicken Breast"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            autoFocus
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              Amount
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="1"
+              min="0"
+              step="0.1"
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              Unit
+            </label>
+            <select
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="serving">Serving</option>
+              <option value="piece">Piece</option>
+              <option value="cup">Cup</option>
+              <option value="gram">Gram</option>
+              <option value="ml">Milliliter (ml)</option>
+              <option value="oz">Ounce</option>
+              <option value="tbsp">Tablespoon</option>
+              <option value="tsp">Teaspoon</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleEstimate}
+            disabled={isEstimating || !foodName.trim()}
+            className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isEstimating ? 'Estimating...' : 'Estimate & Add'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowForm(false);
+              setFoodName('');
+              setAmount('');
+            }}
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

@@ -9,10 +9,21 @@ export interface FoodItem {
 // Meal types
 export type MealType = 'breakfast' | 'lunch' | 'snacks' | 'dinner' | 'extra';
 
+// Custom food entry
+export interface CustomFood {
+  id: string;
+  name: string;
+  calories: number;
+  amount?: number;
+  unit?: string;
+  isCustom: true;
+}
+
 // Daily food log entry
 export interface FoodLog {
   mealType: MealType;
   selectedFoods: string[]; // Array of food IDs
+  customFoods?: CustomFood[]; // Custom foods added by user
 }
 
 // Activity data
