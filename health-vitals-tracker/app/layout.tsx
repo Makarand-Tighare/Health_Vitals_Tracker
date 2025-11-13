@@ -16,6 +16,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Health Vitals Tracker",
   description: "Track your daily food intake, activity, and health metrics",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
+    apple: [
+      { url: '/icon.svg', type: 'image/svg+xml' }
+    ],
+  },
 };
 
 export default function RootLayout({
