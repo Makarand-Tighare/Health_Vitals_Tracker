@@ -2,10 +2,10 @@
 
 export default function Footer() {
   return (
-    <footer className="border-t border-gray-200 bg-white py-6 mt-auto">
-      <div className="mx-auto max-w-6xl px-4">
+    <footer className="border-t border-gray-200 bg-white py-4 sm:py-6 mt-auto">
+      <div className="mx-auto max-w-6xl px-3 sm:px-4">
         <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:justify-between">
-          <p className="text-sm text-gray-600">
+          <p className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
             Made with <span className="text-red-500">❤️</span> by{' '}
             <a
               href="https://www.linkedin.com/in/makarand-tighare/"

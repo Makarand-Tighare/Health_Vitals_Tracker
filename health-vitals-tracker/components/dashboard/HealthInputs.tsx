@@ -19,12 +19,12 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-        <h3 className="text-lg font-semibold text-gray-900">Daily Health Inputs</h3>
-        <p className="mt-1 text-sm text-gray-600">Track sleep, hydration, and wellness metrics</p>
+      <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Daily Health Inputs</h3>
+        <p className="mt-1 text-xs sm:text-sm text-gray-600">Track sleep, hydration, and wellness metrics</p>
       </div>
-      <div className="p-6">
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+      <div className="p-4 sm:p-6">
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Wake Time
@@ -112,12 +112,12 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
             )}
           </div>
           <div className="mt-1">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
               <p className="text-xs text-gray-500">
                 Score is automatically calculated based on your logged foods
               </p>
               {lastCalculated && (
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 whitespace-nowrap">
                   Last calculated: {lastCalculated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}

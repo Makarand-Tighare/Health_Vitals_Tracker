@@ -43,40 +43,40 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-        <h3 className="text-lg font-semibold text-gray-900">Daily Food Log</h3>
-        <p className="mt-1 text-sm text-gray-600">Add foods with AI-powered calorie estimation</p>
+      <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Daily Food Log</h3>
+        <p className="mt-1 text-xs sm:text-sm text-gray-600">Add foods with AI-powered calorie estimation</p>
       </div>
-      <div className="p-6">
-      <div className="space-y-6">
+      <div className="p-4 sm:p-6">
+      <div className="space-y-4 sm:space-y-6">
         {MEAL_TYPES.map(({ type, label }) => {
           const customFoods = getMealCustomFoods(type);
           return (
             <div key={type}>
-              <label className="block text-sm font-semibold text-gray-900 mb-3">
+              <label className="block text-sm font-semibold text-gray-900 mb-2 sm:mb-3">
                 {label}
               </label>
               
               {customFoods.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-2">
+                <div className="mb-2 sm:mb-3 flex flex-wrap gap-1.5 sm:gap-2">
                   {customFoods.map((food) => (
                     <span
                       key={food.id}
-                      className="inline-flex items-center gap-1.5 rounded-md bg-blue-50 border border-blue-200 px-3 py-1.5 text-xs font-medium text-blue-700"
+                      className="inline-flex items-center gap-1 sm:gap-1.5 rounded-md bg-blue-50 border border-blue-200 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-blue-700 max-w-full"
                     >
-                      <span className="font-semibold">{food.name}</span>
+                      <span className="font-semibold truncate">{food.name}</span>
                       {food.amount && (
-                        <span className="text-blue-600">
+                        <span className="text-blue-600 whitespace-nowrap">
                           ({food.amount} {food.unit})
                         </span>
                       )}
-                      <span className="ml-1 text-blue-600 font-semibold">
+                      <span className="ml-0.5 sm:ml-1 text-blue-600 font-semibold whitespace-nowrap">
                         {food.calories} kcal
                       </span>
                       <button
                         type="button"
                         onClick={() => handleRemoveCustomFood(type, food.id)}
-                        className="ml-1.5 text-blue-600 hover:text-blue-800 font-bold text-sm"
+                        className="ml-0.5 sm:ml-1.5 text-blue-600 hover:text-blue-800 font-bold text-sm flex-shrink-0"
                         title="Remove"
                       >
                         ×

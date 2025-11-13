@@ -491,24 +491,24 @@ export default function DashboardPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gray-50 py-8">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="mb-8">
-          <div className="mb-6 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="mx-auto max-w-6xl px-3 sm:px-4">
+        <div className="mb-6 sm:mb-8">
+          <div className="mb-4 sm:mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
                 Health Vitals Tracker
               </h1>
-              <p className="mt-2 text-base text-gray-600">Monitor your daily nutrition, activity, and wellness metrics</p>
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">Monitor your daily nutrition, activity, and wellness metrics</p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Date:</label>
-                <div className="flex items-center gap-1">
+            <div className="flex flex-col gap-3 w-full lg:w-auto">
+              <div className="flex items-center gap-2 flex-wrap">
+                <label className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">Date:</label>
+                <div className="flex items-center gap-1 flex-1 min-w-0">
                   <button
                     type="button"
                     onClick={goToPreviousDay}
-                    className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                    className="rounded-lg border border-gray-300 bg-white p-1.5 sm:p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 flex-shrink-0"
                     title="Previous day"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -519,13 +519,13 @@ export default function DashboardPage() {
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                    className="rounded-lg border border-gray-300 bg-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 flex-1 min-w-0"
                   />
                   <button
                     type="button"
                     onClick={goToNextDay}
                     disabled={date >= getTodayDate()}
-                    className="rounded-lg border border-gray-300 bg-white p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="rounded-lg border border-gray-300 bg-white p-1.5 sm:p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                     title="Next day"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -536,7 +536,7 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={goToToday}
-                      className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                      className="rounded-lg border border-blue-300 bg-blue-50 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-blue-700 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 whitespace-nowrap flex-shrink-0"
                       title="Go to today"
                     >
                       Today
@@ -544,36 +544,36 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 {saveStatus === 'saving' && (
-                  <span className="text-sm text-gray-500 font-medium">Saving...</span>
+                  <span className="text-xs sm:text-sm text-gray-500 font-medium">Saving...</span>
                 )}
                 {saveStatus === 'saved' && (
-                  <span className="text-sm text-green-600 font-medium">Saved</span>
+                  <span className="text-xs sm:text-sm text-green-600 font-medium">Saved</span>
                 )}
                 {lastSaved && saveStatus !== 'saving' && saveStatus !== 'saved' && (
-                  <span className="text-xs text-gray-500 font-normal">
+                  <span className="text-xs text-gray-500 font-normal hidden sm:inline">
                     Last saved: {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 )}
                 <button
                   onClick={() => handleSave(true)}
                   disabled={saving}
-                  className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  className="rounded-lg bg-blue-600 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap ml-auto"
                 >
                   {saving ? 'Saving...' : 'Save Entry'}
                 </button>
               </div>
             </div>
           </div>
-          <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3">
-            <p className="text-sm text-blue-800">
+          <div className="rounded-lg bg-blue-50 border border-blue-100 px-3 sm:px-4 py-2 sm:py-3">
+            <p className="text-xs sm:text-sm text-blue-800">
               <span className="font-semibold">Note:</span> You can update your entries throughout the day. Changes are automatically saved 3 seconds after you stop editing.
             </p>
           </div>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-4 sm:space-y-6 lg:space-y-8">
           <DailyFoodLog foodLogs={foodLogs} onUpdate={setFoodLogs} />
           <ActivityEntry activity={activity} onUpdate={setActivity} />
           <HealthInputsComponent 

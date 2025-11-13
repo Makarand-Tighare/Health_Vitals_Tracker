@@ -146,7 +146,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
       <button
         type="button"
         onClick={() => setShowForm(true)}
-        className="mt-3 w-full rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:border-blue-400 hover:bg-blue-50"
+        className="mt-2 sm:mt-3 w-full rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-gray-700 transition-all hover:border-blue-400 hover:bg-blue-50"
       >
         + Add Custom Food
       </button>
@@ -154,8 +154,8 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-gray-300 bg-gray-50 p-4">
-      <div className="space-y-3">
+    <div className="mt-2 sm:mt-3 rounded-lg border border-gray-300 bg-gray-50 p-3 sm:p-4">
+      <div className="space-y-2.5 sm:space-y-3">
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1.5">
             Food Name
@@ -165,12 +165,12 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
             value={foodName}
             onChange={(e) => setFoodName(e.target.value)}
             placeholder="e.g., Grilled Chicken Breast"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             autoFocus
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <div>
             <label className="block text-xs font-semibold text-gray-700 mb-1.5">
               Amount
@@ -182,7 +182,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
               placeholder="1"
               min="0"
               step="0.1"
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 bg-white px-2 sm:px-3 py-2 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -193,7 +193,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
             <select
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 bg-white px-2 sm:px-3 py-2 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="serving">Serving</option>
               <option value="piece">Piece</option>
@@ -207,12 +207,12 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-col sm:flex-row">
           <button
             type="button"
             onClick={handleEstimate}
             disabled={isEstimating || !foodName.trim()}
-            className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 rounded-md bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isEstimating ? 'Estimating...' : 'Estimate & Add'}
           </button>
@@ -223,7 +223,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
               setFoodName('');
               setAmount('');
             }}
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50"
+            className="rounded-md border border-gray-300 bg-white px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 transition-all hover:bg-gray-50"
           >
             Cancel
           </button>

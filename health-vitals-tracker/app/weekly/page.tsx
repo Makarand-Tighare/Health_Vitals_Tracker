@@ -58,21 +58,21 @@ export default function WeeklyPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="mb-8">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Weekly Summary</h1>
-                <p className="mt-2 text-base text-gray-600">View your weekly health trends and averages</p>
+      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+        <div className="mx-auto max-w-6xl px-3 sm:px-4">
+          <div className="mb-6 sm:mb-8">
+            <div className="mb-4 sm:mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">Weekly Summary</h1>
+                <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">View your weekly health trends and averages</p>
               </div>
-              <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Week Start:</label>
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <label className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">Week Start:</label>
                 <input
                   type="date"
                   value={weekStart}
                   onChange={(e) => setWeekStart(e.target.value)}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  className="rounded-lg border border-gray-300 bg-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
                 />
               </div>
             </div>

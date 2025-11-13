@@ -35,35 +35,35 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-        <h3 className="text-lg font-semibold text-gray-900">Calculated Metrics</h3>
-        <p className="mt-1 text-sm text-gray-600">Automatically computed from your inputs</p>
+      <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Calculated Metrics</h3>
+        <p className="mt-1 text-xs sm:text-sm text-gray-600">Automatically computed from your inputs</p>
       </div>
-      <div className="p-6">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
+      <div className="p-4 sm:p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-5">
           <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Total Intake</div>
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-2xl sm:text-3xl font-bold text-gray-900">
             {metrics.totalIntake}
           </div>
           <div className="text-xs text-gray-500 mt-1">kcal</div>
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-5">
           <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Total Burn</div>
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-2xl sm:text-3xl font-bold text-gray-900">
             {metrics.totalBurn}
           </div>
           <div className="text-xs text-gray-500 mt-1">kcal</div>
         </div>
 
-        <div className={`rounded-lg border p-5 ${
+        <div className={`rounded-lg border p-4 sm:p-5 ${
           metrics.calorieDeficit >= 0 
             ? 'bg-green-50 border-green-200' 
             : 'bg-red-50 border-red-200'
         }`}>
           <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Calorie Deficit</div>
-          <div className={`text-3xl font-bold ${
+          <div className={`text-2xl sm:text-3xl font-bold ${
             metrics.calorieDeficit >= 0 ? 'text-green-700' : 'text-red-700'
           }`}>
             {metrics.calorieDeficit >= 0 ? '+' : ''}{metrics.calorieDeficit}
@@ -71,9 +71,9 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
           <div className="text-xs text-gray-500 mt-1">kcal</div>
         </div>
 
-        <div className={`rounded-lg border p-5 ${getTrendColor(metrics.trend)}`}>
+        <div className={`rounded-lg border p-4 sm:p-5 ${getTrendColor(metrics.trend)}`}>
           <div className="text-xs font-semibold uppercase tracking-wide mb-2">Trend</div>
-          <div className="text-2xl font-bold">
+          <div className="text-xl sm:text-2xl font-bold">
             {getTrendLabel(metrics.trend)}
           </div>
         </div>
