@@ -165,7 +165,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
             value={foodName}
             onChange={(e) => setFoodName(e.target.value)}
             placeholder="e.g., Grilled Chicken Breast"
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-xs sm:text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             autoFocus
           />
         </div>
@@ -182,7 +182,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
               placeholder="1"
               min="0"
               step="0.1"
-              className="w-full rounded-md border border-gray-300 bg-white px-2 sm:px-3 py-2 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 bg-white px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -193,7 +193,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
             <select
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
-              className="w-full rounded-md border border-gray-300 bg-white px-2 sm:px-3 py-2 text-xs sm:text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 bg-white px-2 sm:px-3 py-2 text-xs sm:text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="serving">Serving</option>
               <option value="piece">Piece</option>

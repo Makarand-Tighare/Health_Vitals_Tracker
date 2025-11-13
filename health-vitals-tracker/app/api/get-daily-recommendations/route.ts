@@ -90,7 +90,7 @@ Respond with ONLY the JSON object, no other text.`;
     
     while (retries <= maxRetries) {
       response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
         {
           method: 'POST',
           headers: {

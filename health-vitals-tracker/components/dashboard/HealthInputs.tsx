@@ -33,7 +33,7 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
             type="time"
             value={health.wakeTime}
             onChange={(e) => updateField('wakeTime', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
           />
         </div>
 
@@ -45,7 +45,7 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
             type="time"
             value={health.sleepTime}
             onChange={(e) => updateField('sleepTime', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
           />
         </div>
 
@@ -57,7 +57,7 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
             type="number"
             value={health.waterIntake || ''}
             onChange={(e) => updateField('waterIntake', Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             placeholder="0"
             min="0"
           />
@@ -71,7 +71,7 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
             type="number"
             value={health.fruitIntake || ''}
             onChange={(e) => updateField('fruitIntake', Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             placeholder="0"
             min="0"
           />
@@ -85,7 +85,7 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
             type="number"
             value={health.greenTeaCount || ''}
             onChange={(e) => updateField('greenTeaCount', Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             placeholder="0"
             min="0"
           />
@@ -132,7 +132,7 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
           <select
             value={health.faceStatus}
             onChange={(e) => updateField('faceStatus', e.target.value as HealthInputs['faceStatus'])}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
           >
             <option value="puffy">Puffy</option>
             <option value="dull">Dull</option>
@@ -150,7 +150,7 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
           value={health.notes}
           onChange={(e) => updateField('notes', e.target.value)}
           rows={3}
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
           placeholder="Add any notes about your day..."
         />
       </div>

@@ -52,7 +52,7 @@ export default function ActivityEntry({ activity, onUpdate }: ActivityEntryProps
             type="number"
             value={activity.activeCalories || ''}
             onChange={(e) => updateField('activeCalories', Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             placeholder="0"
           />
         </div>
@@ -65,7 +65,7 @@ export default function ActivityEntry({ activity, onUpdate }: ActivityEntryProps
             type="number"
             value={activity.restingCalories || ''}
             onChange={(e) => updateField('restingCalories', Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             placeholder="0"
           />
         </div>
@@ -90,7 +90,7 @@ export default function ActivityEntry({ activity, onUpdate }: ActivityEntryProps
             type="number"
             value={activity.workoutTime.strength || ''}
             onChange={(e) => updateWorkoutTime('strength', Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             placeholder="0"
           />
         </div>
@@ -103,7 +103,7 @@ export default function ActivityEntry({ activity, onUpdate }: ActivityEntryProps
             type="number"
             value={activity.workoutTime.cardio || ''}
             onChange={(e) => updateWorkoutTime('cardio', Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             placeholder="0"
           />
         </div>
