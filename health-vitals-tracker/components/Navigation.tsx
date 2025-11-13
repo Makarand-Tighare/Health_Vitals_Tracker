@@ -20,8 +20,7 @@ export default function Navigation() {
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
-            <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-              <span className="text-2xl">💚</span>
+            <Link href="/dashboard" className="text-xl font-bold text-gray-900">
               Health Tracker
             </Link>
             <div className="flex space-x-1">
@@ -31,7 +30,7 @@ export default function Navigation() {
                   href={item.href}
                   className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
                     pathname === item.href
-                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md'
+                      ? 'bg-blue-600 text-white'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >

@@ -31,14 +31,12 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-lg">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">
-          <span className="text-xl">🍽️</span>
-        </div>
-        <h3 className="text-2xl font-bold text-gray-900">Daily Food Log</h3>
+    <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+        <h3 className="text-lg font-semibold text-gray-900">Daily Food Log</h3>
+        <p className="mt-1 text-sm text-gray-600">Select foods for each meal to calculate total calorie intake</p>
       </div>
-      
+      <div className="p-6">
       <div className="space-y-6">
         {MEAL_TYPES.map(({ type, label }) => (
           <MealSelector
@@ -49,6 +47,7 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
             onSelectionChange={(foods) => updateMeal(type, foods)}
           />
         ))}
+      </div>
       </div>
     </div>
   );
@@ -101,7 +100,7 @@ function MealSelector({ label, selectedFoods, onSelectionChange }: MealSelectorP
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-semibold text-gray-900 mb-2.5">
         {label}
       </label>
       
@@ -109,7 +108,7 @@ function MealSelector({ label, selectedFoods, onSelectionChange }: MealSelectorP
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-left text-sm shadow-sm transition-all hover:border-green-400 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-left text-sm transition-all hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
         >
           {selectedFoodNames.length > 0
             ? selectedFoodNames.join(', ')
@@ -117,14 +116,14 @@ function MealSelector({ label, selectedFoods, onSelectionChange }: MealSelectorP
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-xl">
-            <div className="p-3 border-b border-gray-100">
+          <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-300 bg-white shadow-lg">
+            <div className="p-3 border-b border-gray-200">
               <input
                 type="text"
                 placeholder="Search foods..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 onClick={(e) => e.stopPropagation()}
                 autoFocus
               />
@@ -135,16 +134,16 @@ function MealSelector({ label, selectedFoods, onSelectionChange }: MealSelectorP
                 filteredFoods.map((food) => (
                   <label
                     key={food.id}
-                    className="flex items-center px-4 py-2.5 hover:bg-green-50 cursor-pointer transition-colors"
+                    className="flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                   >
                     <input
                       type="checkbox"
                       checked={selectedFoods.includes(food.id)}
                       onChange={() => toggleFood(food.id)}
-                      className="mr-3 h-4 w-4 text-green-600 focus:ring-green-500 rounded"
+                      className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 rounded border-gray-300"
                     />
-                    <span className="text-sm text-gray-700 flex-1">{food.name}</span>
-                    <span className="ml-auto text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
+                    <span className="text-sm text-gray-900 flex-1 font-medium">{food.name}</span>
+                    <span className="ml-auto text-xs font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded">
                       {food.calories} kcal
                     </span>
                   </label>
@@ -164,7 +163,7 @@ function MealSelector({ label, selectedFoods, onSelectionChange }: MealSelectorP
           {selectedFoodNames.map((name) => (
             <span
               key={name}
-              className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 shadow-sm"
+              className="inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs font-medium text-blue-700"
             >
               {name}
             </span>

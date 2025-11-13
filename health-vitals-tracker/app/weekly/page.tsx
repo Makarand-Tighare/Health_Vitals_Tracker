@@ -45,7 +45,7 @@ export default function WeeklyPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-lg text-gray-600">Loading...</div>
       </div>
     );
@@ -58,16 +58,24 @@ export default function WeeklyPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 py-8">
+      <div className="min-h-screen bg-gray-50 py-8">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">Weekly Summary</h1>
-            <input
-              type="date"
-              value={weekStart}
-              onChange={(e) => setWeekStart(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
+          <div className="mb-8">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Weekly Summary</h1>
+                <p className="mt-2 text-base text-gray-600">View your weekly health trends and averages</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Week Start:</label>
+                <input
+                  type="date"
+                  value={weekStart}
+                  onChange={(e) => setWeekStart(e.target.value)}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                />
+              </div>
+            </div>
           </div>
 
           {summary ? (

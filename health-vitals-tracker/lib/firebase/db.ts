@@ -5,10 +5,8 @@ import {
   getDoc,
   getDocs,
   setDoc,
-  updateDoc,
   query,
   where,
-  orderBy,
   Timestamp,
 } from 'firebase/firestore';
 import { DailyEntry, WeeklySummary } from '@/types';
@@ -59,11 +57,10 @@ export async function getEntriesInRange(
   endDate: string
 ): Promise<DailyEntry[]> {
   const entriesRef = collection(db, COLLECTIONS.entries);
-  // Use simpler query to avoid compound index requirement
+  // Query only by userId to avoid compound index requirement
   const q = query(
     entriesRef,
-    where('userId', '==', userId),
-    orderBy('date', 'asc')
+    where('userId', '==', userId)
   );
 
   const querySnapshot = await getDocs(q);
@@ -74,8 +71,10 @@ export async function getEntriesInRange(
     updatedAt: doc.data().updatedAt?.toDate(),
   })) as DailyEntry[];
   
-  // Filter by date range in memory
-  return allEntries.filter(entry => entry.date >= startDate && entry.date <= endDate);
+  // Filter by date range and sort in memory
+  return allEntries
+    .filter(entry => entry.date >= startDate && entry.date <= endDate)
+    .sort((a, b) => a.date.localeCompare(b.date));
 }
 
 // Get entries for the current week

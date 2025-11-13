@@ -30,15 +30,10 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
-        <div className="mb-6 text-center">
-          <div className="mb-4 flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-blue-500">
-              <span className="text-3xl">💚</span>
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg border border-gray-200">
+        <div className="mb-8 text-center">
+          <h2 className="text-2xl font-bold text-gray-900">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -57,7 +52,7 @@ export default function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="your@email.com"
             />
           </div>
@@ -72,7 +67,7 @@ export default function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-sm transition-all focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="••••••••"
             />
           </div>
@@ -86,7 +81,7 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-gradient-to-r from-green-600 to-green-700 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:from-green-700 hover:to-green-800 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Sign In'}
           </button>
@@ -96,7 +91,7 @@ export default function LoginForm() {
           {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="font-medium text-green-600 hover:text-green-700 transition-colors"
+            className="font-medium text-blue-600 hover:text-blue-700 transition-colors"
           >
             {isSignUp ? 'Sign In' : 'Sign Up'}
           </button>
