@@ -6,9 +6,10 @@ interface HealthInputsProps {
   health: HealthInputs;
   onUpdate: (health: HealthInputs) => void;
   calculatingQuality?: boolean;
+  lastCalculated?: Date | null;
 }
 
-export default function HealthInputsComponent({ health, onUpdate, calculatingQuality = false }: HealthInputsProps) {
+export default function HealthInputsComponent({ health, onUpdate, calculatingQuality = false, lastCalculated = null }: HealthInputsProps) {
   const updateField = <K extends keyof HealthInputs>(
     field: K,
     value: HealthInputs[K]
@@ -110,9 +111,18 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
               </div>
             )}
           </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Score is automatically calculated based on your logged foods
-          </p>
+          <div className="mt-1">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-500">
+                Score is automatically calculated based on your logged foods
+              </p>
+              {lastCalculated && (
+                <p className="text-xs text-gray-400">
+                  Last calculated: {lastCalculated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
         <div>

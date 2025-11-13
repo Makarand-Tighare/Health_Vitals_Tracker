@@ -10,6 +10,7 @@ import DailyFoodLog from '@/components/dashboard/DailyFoodLog';
 import ActivityEntry from '@/components/dashboard/ActivityEntry';
 import HealthInputsComponent from '@/components/dashboard/HealthInputs';
 import MetricsDisplay from '@/components/dashboard/MetricsDisplay';
+import DailyRecommendations from '@/components/dashboard/DailyRecommendations';
 import Navigation from '@/components/Navigation';
 
 const getTodayDate = () => {
@@ -48,12 +49,20 @@ export default function DashboardPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | null>(null);
   const [calculatingQuality, setCalculatingQuality] = useState(false);
+  const [foodQualityLastCalculated, setFoodQualityLastCalculated] = useState<Date | null>(null);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const recommendationsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const qualityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const qualityAbortControllerRef = useRef<AbortController | null>(null);
+  const lastQualityCalculationRef = useRef<string>('');
   const savingRef = useRef(false);
 
   useEffect(() => {
     if (user && !authLoading) {
+      // Reset timestamp when date changes
+      setFoodQualityLastCalculated(null);
       loadEntry();
     }
   }, [user, date, authLoading]);
@@ -68,16 +77,103 @@ export default function DashboardPage() {
         setFoodLogs(entry.foodLogs);
         setActivity(entry.activity);
         setHealth(entry.health);
+        // Load recommendations if they exist
+        if (entry.recommendations && entry.recommendations.length > 0) {
+          setRecommendations(entry.recommendations);
+        } else {
+          setRecommendations([]);
+        }
+        // Don't reset timestamp - keep it if it was set in current session
+        // If entry has food quality score but no timestamp, it means it was calculated before
+        // In that case, we'll show it when a new calculation happens
       } else {
         // Reset to defaults for new date
         setFoodLogs([]);
         setActivity(defaultActivity);
         setHealth(defaultHealth);
+        setRecommendations([]);
+        // Only reset timestamp when switching to a new date (no entry exists)
+        setFoodQualityLastCalculated(null);
       }
     } catch (error) {
       console.error('Error loading entry:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRecommendations = async (currentFoodLogs: FoodLog[], currentActivity: ActivityData, currentHealth: HealthInputs) => {
+    if (!user) return;
+
+    // Check if recommendations already exist in database first
+    try {
+      const existingEntry = await getDailyEntry(user.uid, date);
+      if (existingEntry?.recommendations && existingEntry.recommendations.length > 0) {
+        // Load from database
+        setRecommendations(existingEntry.recommendations);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking existing recommendations:', error);
+    }
+
+    // Generate new recommendations if they don't exist
+    try {
+      setLoadingRecommendations(true);
+      const metrics = calculateMetrics(currentFoodLogs, currentActivity);
+      
+      const entry: DailyEntry = {
+        id: `${user.uid}_${date}`,
+        userId: user.uid,
+        date,
+        foodLogs: currentFoodLogs,
+        activity: currentActivity,
+        health: currentHealth,
+        metrics,
+      };
+
+      const response = await fetch('/api/get-daily-recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ entry }),
+      });
+
+      if (!response.ok) {
+        // Silently fail - don't show errors for recommendations
+        if (response.status !== 429) {
+          console.warn('Failed to fetch recommendations');
+        }
+        return;
+      }
+
+      const data = await response.json();
+      if (data.recommendations && Array.isArray(data.recommendations)) {
+        setRecommendations(data.recommendations);
+        
+        // Save recommendations to database immediately
+        if (user) {
+          const metrics = calculateMetrics(currentFoodLogs, currentActivity);
+          const entry: DailyEntry = {
+            id: `${user.uid}_${date}`,
+            userId: user.uid,
+            date,
+            foodLogs: currentFoodLogs,
+            activity: currentActivity,
+            health: currentHealth,
+            metrics,
+            recommendations: data.recommendations,
+          };
+          
+          // Save immediately to database
+          await saveDailyEntry(entry);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+    } finally {
+      setLoadingRecommendations(false);
     }
   };
 
@@ -93,6 +189,28 @@ export default function DashboardPage() {
   const goToToday = () => setDate(getTodayDate());
 
   const calculateFoodQuality = async (logs: FoodLog[]) => {
+    // Create a signature of the food logs to detect actual changes
+    const foodsSignature = JSON.stringify(
+      logs
+        .flatMap(log => log.customFoods || [])
+        .map(food => `${food.name}-${food.amount || ''}-${food.unit || ''}`)
+        .sort()
+    );
+
+    // Skip if nothing actually changed
+    if (foodsSignature === lastQualityCalculationRef.current) {
+      return;
+    }
+
+    // Cancel any pending request
+    if (qualityAbortControllerRef.current) {
+      qualityAbortControllerRef.current.abort();
+    }
+
+    // Create new abort controller for this request
+    const abortController = new AbortController();
+    qualityAbortControllerRef.current = abortController;
+
     try {
       setCalculatingQuality(true);
       const response = await fetch('/api/calculate-food-quality', {
@@ -101,7 +219,13 @@ export default function DashboardPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ foodLogs: logs }),
+        signal: abortController.signal,
       });
+
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -116,17 +240,25 @@ export default function DashboardPage() {
       }
 
       const data = await response.json();
-      if (data.score) {
+      if (data.score && !abortController.signal.aborted) {
+        lastQualityCalculationRef.current = foodsSignature;
         setHealth(prev => ({
           ...prev,
           foodQualityScore: data.score,
         }));
+        setFoodQualityLastCalculated(new Date());
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Ignore abort errors
+      if (error.name === 'AbortError') {
+        return;
+      }
       console.error('Error calculating food quality:', error);
       // Keep existing score on error - don't show alert to avoid annoying user
     } finally {
-      setCalculatingQuality(false);
+      if (!abortController.signal.aborted) {
+        setCalculatingQuality(false);
+      }
     }
   };
 
@@ -175,6 +307,7 @@ export default function DashboardPage() {
         activity,
         health,
         metrics,
+        recommendations, // Preserve existing recommendations
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -205,18 +338,19 @@ export default function DashboardPage() {
       clearTimeout(qualityTimeoutRef.current);
     }
 
-    // Set new timeout for quality calculation (5 seconds after last change to reduce API calls)
+    // Set new timeout for quality calculation (15 seconds after last change to reduce API calls)
     qualityTimeoutRef.current = setTimeout(() => {
       if (foodLogs.length > 0) {
         calculateFoodQuality(foodLogs);
       } else {
         // No foods, reset to default
+        lastQualityCalculationRef.current = '';
         setHealth(prev => ({
           ...prev,
           foodQualityScore: 3,
         }));
       }
-    }, 5000);
+    }, 15000);
 
     return () => {
       if (qualityTimeoutRef.current) {
@@ -225,6 +359,38 @@ export default function DashboardPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [foodLogs]);
+
+  // Fetch recommendations when data changes - only if not already stored
+  useEffect(() => {
+    if (!user || loading) return;
+    
+    // Clear existing timeout
+    if (recommendationsTimeoutRef.current) {
+      clearTimeout(recommendationsTimeoutRef.current);
+    }
+    
+    // Only fetch if there's meaningful data
+    const hasData = foodLogs.length > 0 || 
+                    activity.activeCalories > 0 || 
+                    activity.restingCalories > 0 ||
+                    health.waterIntake > 0;
+    
+    if (hasData) {
+      // Check database first, then generate if needed (with small debounce to avoid too many calls)
+      recommendationsTimeoutRef.current = setTimeout(() => {
+        fetchRecommendations(foodLogs, activity, health);
+      }, 3000); // 3 seconds debounce for faster generation
+    } else {
+      setRecommendations([]);
+    }
+
+    return () => {
+      if (recommendationsTimeoutRef.current) {
+        clearTimeout(recommendationsTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [foodLogs, activity, health, date, user]);
 
   // Auto-save when data changes (with debounce)
   useEffect(() => {
@@ -282,6 +448,7 @@ export default function DashboardPage() {
             activity,
             health,
             metrics,
+            recommendations, // Preserve existing recommendations
             createdAt: new Date(),
             updatedAt: new Date(),
           };
@@ -413,8 +580,13 @@ export default function DashboardPage() {
             health={health} 
             onUpdate={setHealth} 
             calculatingQuality={calculatingQuality}
+            lastCalculated={foodQualityLastCalculated}
           />
           <MetricsDisplay metrics={metrics} />
+          <DailyRecommendations 
+            recommendations={recommendations} 
+            loading={loadingRecommendations}
+          />
         </div>
       </div>
       </div>

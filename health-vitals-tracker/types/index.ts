@@ -57,6 +57,14 @@ export interface CalculatedMetrics {
   trend: 'good' | 'moderate' | 'bad'; // Based on deficit
 }
 
+// AI Recommendation
+export interface Recommendation {
+  category: 'Nutrition' | 'Exercise' | 'Sleep' | 'Hydration' | 'Overall';
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
 // Complete daily entry
 export interface DailyEntry {
   id?: string;
@@ -66,6 +74,7 @@ export interface DailyEntry {
   activity: ActivityData;
   health: HealthInputs;
   metrics: CalculatedMetrics;
+  recommendations?: Recommendation[];
   createdAt?: Date;
   updatedAt?: Date;
 }

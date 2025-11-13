@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { CustomFood } from '@/types';
 
 interface CustomFoodInputProps {
@@ -8,15 +8,61 @@ interface CustomFoodInputProps {
   mealType: string;
 }
 
+// Simple in-memory cache for calorie estimates
+interface CacheEntry {
+  calories: number;
+  timestamp: number;
+}
+
+const calorieCache = new Map<string, CacheEntry>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProps) {
   const [foodName, setFoodName] = useState('');
   const [amount, setAmount] = useState('');
   const [unit, setUnit] = useState('serving');
   const [isEstimating, setIsEstimating] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleEstimate = async () => {
     if (!foodName.trim()) return;
+
+    // Cancel any pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Check cache first
+    const cacheKey = `${foodName.trim().toLowerCase()}-${amount || '1'}-${unit}`;
+    const cached = calorieCache.get(cacheKey);
+    if (cached) {
+      const age = Date.now() - cached.timestamp;
+      if (age < CACHE_DURATION) {
+        // Use cached value
+        const customFood: CustomFood = {
+          id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: foodName.trim(),
+          calories: cached.calories,
+          amount: amount ? parseFloat(amount) : undefined,
+          unit: unit,
+          isCustom: true,
+        };
+        onAdd(customFood);
+        setFoodName('');
+        setAmount('');
+        setUnit('serving');
+        setShowForm(false);
+        return;
+      } else {
+        // Cache expired, remove it
+        calorieCache.delete(cacheKey);
+      }
+    }
+
+    // Create new abort controller
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     setIsEstimating(true);
     try {
@@ -30,10 +76,22 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
           amount: amount ? parseFloat(amount) : undefined,
           unit: unit,
         }),
+        signal: abortController.signal,
       });
 
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
+        
+        // Handle rate limit errors more gracefully
+        if (response.status === 429) {
+          throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+        }
+        
         throw new Error(errorData.error || 'Failed to estimate calories');
       }
 
@@ -47,25 +105,39 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
         throw new Error('Invalid calorie estimate received');
       }
 
-      const customFood: CustomFood = {
-        id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: foodName.trim(),
+      // Cache the result
+      calorieCache.set(cacheKey, {
         calories: Math.round(data.calories),
-        amount: amount ? parseFloat(amount) : undefined,
-        unit: unit,
-        isCustom: true,
-      };
+        timestamp: Date.now(),
+      });
 
-      onAdd(customFood);
-      setFoodName('');
-      setAmount('');
-      setUnit('serving');
-      setShowForm(false);
+      if (!abortController.signal.aborted) {
+        const customFood: CustomFood = {
+          id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name: foodName.trim(),
+          calories: Math.round(data.calories),
+          amount: amount ? parseFloat(amount) : undefined,
+          unit: unit,
+          isCustom: true,
+        };
+
+        onAdd(customFood);
+        setFoodName('');
+        setAmount('');
+        setUnit('serving');
+        setShowForm(false);
+      }
     } catch (error: any) {
+      // Ignore abort errors
+      if (error.name === 'AbortError') {
+        return;
+      }
       console.error('Error estimating calories:', error);
       alert(error.message || 'Failed to estimate calories. Please check your GEMINI_API_KEY configuration.');
     } finally {
-      setIsEstimating(false);
+      if (!abortController.signal.aborted) {
+        setIsEstimating(false);
+      }
     }
   };
 

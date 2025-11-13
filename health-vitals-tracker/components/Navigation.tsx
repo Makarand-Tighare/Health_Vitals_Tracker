@@ -3,10 +3,14 @@
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { getAllEntries } from '@/lib/firebase/db';
+import { exportToExcel } from '@/lib/exportToExcel';
 
 export default function Navigation() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const [exporting, setExporting] = useState(false);
 
   if (!user) return null;
 
@@ -14,6 +18,25 @@ export default function Navigation() {
     { href: '/dashboard', label: 'Daily Entry' },
     { href: '/weekly', label: 'Weekly Summary' },
   ];
+
+  const handleExportToExcel = async () => {
+    if (!user) return;
+
+    setExporting(true);
+    try {
+      const allEntries = await getAllEntries(user.uid);
+      if (allEntries.length === 0) {
+        alert('No data to export. Please log some entries first.');
+        return;
+      }
+      exportToExcel(allEntries, 'health-vitals-tracker');
+    } catch (error) {
+      console.error('Error exporting to Excel:', error);
+      alert('Error exporting data. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <nav className="border-b border-gray-200 bg-white shadow-sm">
@@ -41,6 +64,14 @@ export default function Navigation() {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600 hidden sm:block">{user.email}</span>
+            <button
+              onClick={handleExportToExcel}
+              disabled={exporting}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export all data to Excel"
+            >
+              {exporting ? 'Exporting...' : '📊 Export to Excel'}
+            </button>
             <button
               onClick={logout}
               className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-200 hover:shadow-sm"

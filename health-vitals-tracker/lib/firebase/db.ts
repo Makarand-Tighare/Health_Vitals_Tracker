@@ -124,3 +124,20 @@ export async function getWeeklyEntries(
   return getEntriesInRange(userId, weekStart, endDate);
 }
 
+// Get all entries for a user
+export async function getAllEntries(userId: string): Promise<DailyEntry[]> {
+  const entriesRef = collection(db, COLLECTIONS.entries);
+  const q = query(entriesRef, where('userId', '==', userId));
+
+  const querySnapshot = await getDocs(q);
+  const allEntries = querySnapshot.docs.map(doc => ({
+    ...doc.data(),
+    id: doc.id,
+    createdAt: doc.data().createdAt?.toDate(),
+    updatedAt: doc.data().updatedAt?.toDate(),
+  })) as DailyEntry[];
+  
+  // Sort by date
+  return allEntries.sort((a, b) => a.date.localeCompare(b.date));
+}
+
