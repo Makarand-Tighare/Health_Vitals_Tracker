@@ -15,6 +15,22 @@ export function calculateTotalIntake(foodLogs: FoodLog[]): number {
   return total;
 }
 
+// Calculate total protein from food logs
+export function calculateTotalProtein(foodLogs: FoodLog[]): number {
+  let total = 0;
+  foodLogs.forEach(log => {
+    // Add protein from custom foods
+    if (log.customFoods) {
+      log.customFoods.forEach(food => {
+        if (food.protein !== undefined && food.protein !== null) {
+          total += food.protein;
+        }
+      });
+    }
+  });
+  return Math.round(total * 10) / 10; // Round to 1 decimal place
+}
+
 // Calculate total burn from activity data
 export function calculateTotalBurn(activity: ActivityData): number {
   return activity.activeCalories + activity.restingCalories;
@@ -41,16 +57,20 @@ export function calculateMetrics(
   const totalBurn = calculateTotalBurn(activity);
   const calorieDeficit = calculateDeficit(totalIntake, totalBurn);
   const trend = determineTrend(calorieDeficit);
+  const totalProtein = calculateTotalProtein(foodLogs);
 
   return {
     totalIntake,
     totalBurn,
     calorieDeficit,
     trend,
+    totalProtein,
   };
 }
 
 // Calculate sleep hours from wake and sleep times
+// sleepTime: time you go to sleep (e.g., "23:00" or "01:00")
+// wakeTime: time you wake up (e.g., "07:00" or "09:00")
 export function calculateSleepHours(wakeTime: string, sleepTime: string): number {
   const [wakeHour, wakeMin] = wakeTime.split(':').map(Number);
   const [sleepHour, sleepMin] = sleepTime.split(':').map(Number);
@@ -58,12 +78,20 @@ export function calculateSleepHours(wakeTime: string, sleepTime: string): number
   let wakeMinutes = wakeHour * 60 + wakeMin;
   let sleepMinutes = sleepHour * 60 + sleepMin;
   
-  // Handle overnight sleep (sleep time is next day)
-  if (sleepMinutes < wakeMinutes) {
-    sleepMinutes += 24 * 60; // Add 24 hours
+  // Handle overnight sleep: if sleep time is later in the day than wake time,
+  // it means you slept overnight (e.g., sleep at 23:00, wake at 07:00)
+  // If sleep time is earlier than wake time (e.g., sleep at 01:00, wake at 09:00),
+  // it also means overnight sleep, but sleep time is the next day
+  if (sleepMinutes > wakeMinutes) {
+    // Sleep time is later in the day (e.g., 23:00 sleep, 07:00 wake)
+    // Sleep duration = (24:00 - sleep) + wake = (1440 - sleep) + wake
+    sleepMinutes = (24 * 60) - sleepMinutes + wakeMinutes;
+  } else {
+    // Sleep time is earlier in the day (e.g., 01:00 sleep, 09:00 wake)
+    // This means you slept from 01:00 to 09:00 same day = 8 hours
+    sleepMinutes = wakeMinutes - sleepMinutes;
   }
   
-  const sleepDuration = sleepMinutes - wakeMinutes;
-  return sleepDuration / 60; // Convert to hours
+  return sleepMinutes / 60; // Convert to hours
 }
 

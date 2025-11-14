@@ -14,6 +14,7 @@ export interface CustomFood {
   id: string;
   name: string;
   calories: number;
+  protein?: number; // Protein in grams
   amount?: number;
   unit?: string;
   isCustom: true;
@@ -44,6 +45,7 @@ export interface HealthInputs {
   waterIntake: number; // glasses/cups
   fruitIntake: number; // servings
   greenTeaCount: number;
+  blackCoffeeCount?: number; // cups
   foodQualityScore: number; // 1-5
   faceStatus: 'puffy' | 'dull' | 'normal' | 'bright';
   notes: string;
@@ -55,6 +57,7 @@ export interface CalculatedMetrics {
   totalBurn: number; // Active + Resting calories
   calorieDeficit: number; // Burn - Intake
   trend: 'good' | 'moderate' | 'bad'; // Based on deficit
+  totalProtein?: number; // Total protein in grams
 }
 
 // AI Recommendation

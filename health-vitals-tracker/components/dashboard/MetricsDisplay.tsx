@@ -40,7 +40,7 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
         <p className="mt-1 text-xs sm:text-sm text-gray-600">Automatically computed from your inputs</p>
       </div>
       <div className="p-4 sm:p-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 sm:p-5">
           <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Total Intake</div>
           <div className="text-2xl sm:text-3xl font-bold text-gray-900">
@@ -69,6 +69,14 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
             {metrics.calorieDeficit >= 0 ? '+' : ''}{metrics.calorieDeficit}
           </div>
           <div className="text-xs text-gray-500 mt-1">kcal</div>
+        </div>
+
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 sm:p-5">
+          <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Total Protein</div>
+          <div className="text-2xl sm:text-3xl font-bold text-blue-700">
+            {metrics.totalProtein !== undefined ? metrics.totalProtein : '—'}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">grams</div>
         </div>
 
         <div className={`rounded-lg border p-4 sm:p-5 ${getTrendColor(metrics.trend)}`}>

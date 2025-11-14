@@ -38,6 +38,7 @@ const defaultHealth: HealthInputs = {
   waterIntake: 0,
   fruitIntake: 0,
   greenTeaCount: 0,
+  blackCoffeeCount: 0,
   foodQualityScore: 3,
   faceStatus: 'normal',
   notes: '',
@@ -304,6 +305,10 @@ export default function DashboardPage() {
             }
             if (food.unit !== undefined && food.unit !== null && food.unit !== '') {
               cleaned.unit = food.unit;
+            }
+            // Preserve protein if it exists (for new entries with protein estimation)
+            if (food.protein !== undefined && food.protein !== null) {
+              cleaned.protein = food.protein;
             }
             return cleaned;
           });

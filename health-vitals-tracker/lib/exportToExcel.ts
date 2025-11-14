@@ -4,15 +4,23 @@ import { DailyEntry } from '@/types';
 export function exportToExcel(entries: DailyEntry[], filename: string = 'health-data') {
   // Prepare data for Excel
   const excelData = entries.map(entry => {
-    // Calculate sleep hours
+    // Calculate sleep hours using the same logic as calculateSleepHours
     const wakeTime = entry.health?.wakeTime || '07:00';
     const sleepTime = entry.health?.sleepTime || '23:00';
     const [wakeHour, wakeMin] = wakeTime.split(':').map(Number);
     const [sleepHour, sleepMin] = sleepTime.split(':').map(Number);
     const wakeMinutes = wakeHour * 60 + wakeMin;
-    const sleepMinutes = sleepHour * 60 + sleepMin;
-    let sleepHours = (sleepMinutes - wakeMinutes) / 60;
-    if (sleepHours < 0) sleepHours += 24;
+    let sleepMinutes = sleepHour * 60 + sleepMin;
+    
+    // Handle overnight sleep correctly
+    if (sleepMinutes > wakeMinutes) {
+      // Sleep time is later in the day (e.g., 23:00 sleep, 07:00 wake)
+      sleepMinutes = (24 * 60) - sleepMinutes + wakeMinutes;
+    } else {
+      // Sleep time is earlier in the day (e.g., 01:00 sleep, 09:00 wake)
+      sleepMinutes = wakeMinutes - sleepMinutes;
+    }
+    const sleepHours = sleepMinutes / 60;
 
     // Get all foods
     const allFoods = entry.foodLogs
@@ -41,6 +49,7 @@ export function exportToExcel(entries: DailyEntry[], filename: string = 'health-
       'Water Intake (glasses)': entry.health?.waterIntake || 0,
       'Fruit Intake (servings)': entry.health?.fruitIntake || 0,
       'Green Tea Count': entry.health?.greenTeaCount || 0,
+      'Black Coffee Count': entry.health?.blackCoffeeCount || 0,
       'Food Quality Score': entry.health?.foodQualityScore || 0,
       'Face Status': entry.health?.faceStatus || '',
       'Foods Consumed': allFoods,
@@ -71,6 +80,7 @@ export function exportToExcel(entries: DailyEntry[], filename: string = 'health-
     { wch: 20 }, // Water Intake
     { wch: 22 }, // Fruit Intake
     { wch: 16 }, // Green Tea Count
+    { wch: 20 }, // Black Coffee Count
     { wch: 18 }, // Food Quality Score
     { wch: 12 }, // Face Status
     { wch: 50 }, // Foods Consumed

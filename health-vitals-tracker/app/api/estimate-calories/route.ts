@@ -21,9 +21,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = `Estimate the calories in kcal for ${amount || '1'} ${unit || 'serving'} of ${foodName}. 
-    Provide only a number (no text, no explanation, just the calorie count). 
-    If the amount is not specified, assume 1 standard serving.`;
+    const prompt = `Estimate the calories (in kcal) and protein (in grams) for ${amount || '1'} ${unit || 'serving'} of ${foodName}. 
+    Respond with ONLY a JSON object in this exact format:
+    {"calories": <number>, "protein": <number>}
+    
+    If the amount is not specified, assume 1 standard serving.
+    Provide only the JSON object, no other text.`;
 
     // Retry logic for rate limits
     let response: Response | null = null;
@@ -46,7 +49,7 @@ export async function POST(request: NextRequest) {
             }],
             generationConfig: {
               temperature: 0.3,
-              maxOutputTokens: 50,
+              maxOutputTokens: 100,
             }
           }),
         }
@@ -90,8 +93,42 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    const caloriesText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-    const calories = parseInt(caloriesText.replace(/[^0-9]/g, ''));
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    
+    // Try to parse JSON from response
+    let result;
+    try {
+      // Extract JSON from response (might have markdown code blocks)
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        result = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in response');
+      }
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', responseText);
+      // Fallback: try to extract numbers
+      const caloriesMatch = responseText.match(/["']?calories["']?\s*:\s*(\d+)/i);
+      const proteinMatch = responseText.match(/["']?protein["']?\s*:\s*(\d+)/i);
+      const calories = caloriesMatch ? parseInt(caloriesMatch[1]) : null;
+      const protein = proteinMatch ? parseFloat(proteinMatch[1]) : null;
+      
+      if (!calories || isNaN(calories)) {
+        return NextResponse.json(
+          { error: 'Could not parse calorie estimate from AI response. Please try again.' },
+          { status: 500 }
+        );
+      }
+      
+      return NextResponse.json({
+        calories,
+        protein: protein && !isNaN(protein) ? protein : undefined,
+        method: 'ai'
+      });
+    }
+
+    const calories = result.calories ? parseInt(result.calories) : null;
+    const protein = result.protein ? parseFloat(result.protein) : undefined;
 
     if (!calories || isNaN(calories)) {
       return NextResponse.json(
@@ -102,6 +139,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       calories,
+      protein: protein && !isNaN(protein) ? protein : undefined,
       method: 'ai'
     });
   } catch (error) {

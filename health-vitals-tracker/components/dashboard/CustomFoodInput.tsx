@@ -8,9 +8,10 @@ interface CustomFoodInputProps {
   mealType: string;
 }
 
-// Simple in-memory cache for calorie estimates
+// Simple in-memory cache for calorie and protein estimates
 interface CacheEntry {
   calories: number;
+  protein?: number;
   timestamp: number;
 }
 
@@ -44,6 +45,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
           id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: foodName.trim(),
           calories: cached.calories,
+          protein: cached.protein,
           amount: amount ? parseFloat(amount) : undefined,
           unit: unit,
           isCustom: true,
@@ -108,6 +110,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
       // Cache the result
       calorieCache.set(cacheKey, {
         calories: Math.round(data.calories),
+        protein: data.protein ? parseFloat(data.protein) : undefined,
         timestamp: Date.now(),
       });
 
@@ -116,6 +119,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
           id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: foodName.trim(),
           calories: Math.round(data.calories),
+          protein: data.protein ? parseFloat(data.protein) : undefined,
           amount: amount ? parseFloat(amount) : undefined,
           unit: unit,
           isCustom: true,
