@@ -21,6 +21,32 @@ const priorityIcons = {
   low: '🟢',
 };
 
+// Parse description to extract "Improve" section
+const parseRecommendation = (description: string) => {
+  // Look for patterns like "**To improve:**", "**To improve**", "To improve:", etc.
+  const improvePatterns = [
+    /\*\*To improve:\*\*/i,
+    /\*\*To improve\*\*/i,
+    /To improve:/i,
+    /\*\*How to improve:\*\*/i,
+    /\*\*How to improve\*\*/i,
+    /How to improve:/i,
+  ];
+
+  for (const pattern of improvePatterns) {
+    const match = description.match(pattern);
+    if (match) {
+      const index = match.index! + match[0].length;
+      const problem = description.substring(0, match.index).trim();
+      const improve = description.substring(index).trim();
+      return { problem, improve };
+    }
+  }
+
+  // If no "improve" section found, return entire description as problem
+  return { problem: description, improve: null };
+};
+
 export default function DailyRecommendations({ recommendations, loading }: DailyRecommendationsProps) {
   if (loading) {
     return (
@@ -51,25 +77,43 @@ export default function DailyRecommendations({ recommendations, loading }: Daily
       </div>
       <div className="p-4 sm:p-6">
         <div className="space-y-3 sm:space-y-4">
-          {recommendations.map((rec, index) => (
-            <div
-              key={index}
-              className={`rounded-lg border p-3 sm:p-4 ${categoryColors[rec.category] || categoryColors.Overall}`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
-                    <span className="text-xs sm:text-sm font-semibold">{rec.title}</span>
-                    <span className="text-xs">{priorityIcons[rec.priority]}</span>
-                    <span className="text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded bg-white/50 whitespace-nowrap">
-                      {rec.category}
-                    </span>
+          {recommendations.map((rec, index) => {
+            const { problem, improve } = parseRecommendation(rec.description);
+            return (
+              <div
+                key={index}
+                className={`rounded-lg border p-3 sm:p-4 ${categoryColors[rec.category] || categoryColors.Overall}`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+                      <span className="text-xs sm:text-sm font-semibold">{rec.title}</span>
+                      <span className="text-xs">{priorityIcons[rec.priority]}</span>
+                      <span className="text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded bg-white/50 whitespace-nowrap">
+                        {rec.category}
+                      </span>
+                    </div>
+                    {problem && (
+                      <p className={`text-xs sm:text-sm leading-relaxed ${improve ? 'mb-3' : ''}`}>{problem}</p>
+                    )}
+                    {improve && (
+                      <div className="mt-3 pt-3 border-t-2 border-white/60">
+                        <div className="flex items-start gap-2">
+                          <svg className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div className="flex-1">
+                            <div className="text-xs sm:text-sm font-semibold text-green-700 mb-1.5">How to Improve:</div>
+                            <p className="text-xs sm:text-sm leading-relaxed text-green-800">{improve}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-xs sm:text-sm leading-relaxed">{rec.description}</p>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
