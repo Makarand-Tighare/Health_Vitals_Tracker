@@ -59,12 +59,12 @@ export default function DashboardPage() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const recommendationsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const qualityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const qualityAbortControllerRef = useRef<AbortController | null>(null);
   const lastQualityCalculationRef = useRef<string>('');
   const savingRef = useRef(false);
   const hasInitializedRef = useRef(false);
+  const currentEditDateRef = useRef<string>('');
 
   // Ensure date is set to today on initial load/reload (only once per session)
   useEffect(() => {
@@ -87,54 +87,62 @@ export default function DashboardPage() {
   const loadEntry = async () => {
     if (!user) return;
 
+    // CRITICAL: Clear state FIRST before loading to prevent data mixing
+    setFoodLogs([]);
+    setActivity(defaultActivity);
+    setHealth(defaultHealth);
+    setRecommendations([]);
+    
     setLoading(true);
+    // Clear any pending auto-saves when loading a new date
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    
+    // Capture the date we're loading to prevent race conditions
+    const loadDate = date;
+    // Update the current edit date ref
+    currentEditDateRef.current = loadDate;
+    
     try {
-      const entry = await getDailyEntry(user.uid, date);
+      const entry = await getDailyEntry(user.uid, loadDate);
       if (entry) {
-        setFoodLogs(entry.foodLogs);
-        setActivity(entry.activity);
-        setHealth(entry.health);
-        // Load recommendations if they exist
-        if (entry.recommendations && entry.recommendations.length > 0) {
-          setRecommendations(entry.recommendations);
-        } else {
-          setRecommendations([]);
+        // Double-check we're still loading the same date (prevent race conditions)
+        if (currentEditDateRef.current === loadDate) {
+          setFoodLogs(entry.foodLogs || []);
+          setActivity(entry.activity || defaultActivity);
+          setHealth(entry.health || defaultHealth);
+          // Load recommendations if they exist
+          if (entry.recommendations && entry.recommendations.length > 0) {
+            setRecommendations(entry.recommendations);
+          } else {
+            setRecommendations([]);
+          }
         }
-        // Don't reset timestamp - keep it if it was set in current session
-        // If entry has food quality score but no timestamp, it means it was calculated before
-        // In that case, we'll show it when a new calculation happens
       } else {
-        // Reset to defaults for new date
-        setFoodLogs([]);
-        setActivity(defaultActivity);
-        setHealth(defaultHealth);
-        setRecommendations([]);
-        // Only reset timestamp when switching to a new date (no entry exists)
-        setFoodQualityLastCalculated(null);
+        // Reset to defaults for new date (only if still on same date)
+        if (currentEditDateRef.current === loadDate) {
+          setFoodLogs([]);
+          setActivity(defaultActivity);
+          setHealth(defaultHealth);
+          setRecommendations([]);
+          setFoodQualityLastCalculated(null);
+        }
       }
     } catch (error) {
       console.error('Error loading entry:', error);
     } finally {
-      setLoading(false);
+      if (currentEditDateRef.current === loadDate) {
+        setLoading(false);
+      }
     }
   };
 
   const fetchRecommendations = async (currentFoodLogs: FoodLog[], currentActivity: ActivityData, currentHealth: HealthInputs) => {
     if (!user) return;
 
-    // Check if recommendations already exist in database first
-    try {
-      const existingEntry = await getDailyEntry(user.uid, date);
-      if (existingEntry?.recommendations && existingEntry.recommendations.length > 0) {
-        // Load from database
-        setRecommendations(existingEntry.recommendations);
-        return;
-      }
-    } catch (error) {
-      console.error('Error checking existing recommendations:', error);
-    }
-
-    // Generate new recommendations if they don't exist
+    // Generate new recommendations
     try {
       setLoadingRecommendations(true);
       const metrics = calculateMetrics(currentFoodLogs, currentActivity);
@@ -282,6 +290,23 @@ export default function DashboardPage() {
   const handleSave = async (showNotification = true) => {
     if (!user) return;
 
+    // Clear any pending auto-saves before manual save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+
+    // CRITICAL: Capture the date IMMEDIATELY at the start of save
+    // This prevents race conditions if date changes during save
+    const saveDate = date;
+    
+    // Double-check we're saving to the correct date
+    if (saveDate !== currentEditDateRef.current && currentEditDateRef.current !== '') {
+      console.error('Date mismatch! Current date:', date, 'Edit date ref:', currentEditDateRef.current);
+      alert('Error: Date mismatch detected. Please reload the page.');
+      return;
+    }
+
     setSaving(true);
     savingRef.current = true;
     setSaveStatus('saving');
@@ -306,9 +331,15 @@ export default function DashboardPage() {
             if (food.unit !== undefined && food.unit !== null && food.unit !== '') {
               cleaned.unit = food.unit;
             }
-            // Preserve protein if it exists (for new entries with protein estimation)
-            if (food.protein !== undefined && food.protein !== null) {
-              cleaned.protein = food.protein;
+            // Preserve protein if it exists (including 0)
+            if ('protein' in food) {
+              const proteinValue = food.protein;
+              if (proteinValue !== undefined && proteinValue !== null) {
+                const numProtein = typeof proteinValue === 'number' ? proteinValue : Number(proteinValue);
+                if (!isNaN(numProtein)) {
+                  cleaned.protein = numProtein;
+                }
+              }
             }
             return cleaned;
           });
@@ -321,9 +352,9 @@ export default function DashboardPage() {
         });
 
       const entry: DailyEntry = {
-        id: `${user.uid}_${date}`,
+        id: `${user.uid}_${saveDate}`,
         userId: user.uid,
-        date,
+        date: saveDate,
         foodLogs: cleanedFoodLogs,
         activity,
         health,
@@ -333,7 +364,10 @@ export default function DashboardPage() {
         updatedAt: new Date(),
       };
 
+      // Log what we're saving to verify correct date
+      console.log(`[SAVE] Saving to date: ${saveDate}, Entry ID: ${entry.id}, Current state date: ${date}`);
       await saveDailyEntry(entry);
+      console.log(`[SAVE] Successfully saved to date: ${saveDate}`);
       setLastSaved(new Date());
       setSaveStatus('saved');
       if (showNotification) {
@@ -381,37 +415,28 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [foodLogs]);
 
-  // Fetch recommendations when data changes - only if not already stored
+  // Load existing recommendations when date changes (but don't auto-generate)
   useEffect(() => {
     if (!user || loading) return;
     
-    // Clear existing timeout
-    if (recommendationsTimeoutRef.current) {
-      clearTimeout(recommendationsTimeoutRef.current);
-    }
-    
-    // Only fetch if there's meaningful data
-    const hasData = foodLogs.length > 0 || 
-                    activity.activeCalories > 0 || 
-                    activity.restingCalories > 0 ||
-                    health.waterIntake > 0;
-    
-    if (hasData) {
-      // Check database first, then generate if needed (with small debounce to avoid too many calls)
-      recommendationsTimeoutRef.current = setTimeout(() => {
-        fetchRecommendations(foodLogs, activity, health);
-      }, 3000); // 3 seconds debounce for faster generation
-    } else {
-      setRecommendations([]);
-    }
-
-    return () => {
-      if (recommendationsTimeoutRef.current) {
-        clearTimeout(recommendationsTimeoutRef.current);
+    // Only check database for existing recommendations, don't auto-generate
+    const loadExistingRecommendations = async () => {
+      try {
+        const existingEntry = await getDailyEntry(user.uid, date);
+        if (existingEntry?.recommendations && existingEntry.recommendations.length > 0) {
+          setRecommendations(existingEntry.recommendations);
+        } else {
+          setRecommendations([]);
+        }
+      } catch (error) {
+        console.error('Error loading recommendations:', error);
+        setRecommendations([]);
       }
     };
+    
+    loadExistingRecommendations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [foodLogs, activity, health, date, user]);
+  }, [date, user, loading]);
 
   // Auto-save when data changes (with debounce)
   useEffect(() => {
@@ -423,8 +448,15 @@ export default function DashboardPage() {
     }
 
     // Set new timeout for auto-save (3 seconds after last change)
+    // Capture the current date to ensure we save to the correct date
+    const saveDate = date;
     saveTimeoutRef.current = setTimeout(async () => {
-      if (!savingRef.current && user) {
+      // Only save if:
+      // 1. Not already saving
+      // 2. User is logged in
+      // 3. Not currently loading
+      // 4. The date hasn't changed since we set the timeout
+      if (!savingRef.current && user && !loading && saveDate === currentEditDateRef.current) {
         // Auto-save without notification
         const currentUserId = user.uid;
         setSaving(true);
@@ -451,6 +483,16 @@ export default function DashboardPage() {
                 if (food.unit !== undefined && food.unit !== null && food.unit !== '') {
                   cleaned.unit = food.unit;
                 }
+                // Preserve protein if it exists (including 0)
+                if ('protein' in food) {
+                  const proteinValue = food.protein;
+                  if (proteinValue !== undefined && proteinValue !== null) {
+                    const numProtein = typeof proteinValue === 'number' ? proteinValue : Number(proteinValue);
+                    if (!isNaN(numProtein)) {
+                      cleaned.protein = numProtein;
+                    }
+                  }
+                }
                 return cleaned;
               });
               
@@ -462,9 +504,9 @@ export default function DashboardPage() {
             });
 
           const entry: DailyEntry = {
-            id: `${currentUserId}_${date}`,
+            id: `${currentUserId}_${saveDate}`,
             userId: currentUserId,
-            date,
+            date: saveDate,
             foodLogs: cleanedFoodLogs,
             activity,
             health,
@@ -528,7 +570,14 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-1 flex-1 min-w-0">
                   <button
                     type="button"
-                    onClick={goToPreviousDay}
+                    onClick={() => {
+                      if (savingRef.current) {
+                        alert('Please wait for the current save to complete before changing dates.');
+                        return;
+                      }
+                      goToPreviousDay();
+                    }}
+                    disabled={savingRef.current}
                     className="rounded-lg border border-gray-300 bg-white p-1.5 sm:p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 flex-shrink-0"
                     title="Previous day"
                   >
@@ -539,13 +588,27 @@ export default function DashboardPage() {
                   <input
                     type="date"
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={(e) => {
+                      // Prevent date change while saving
+                      if (savingRef.current) {
+                        alert('Please wait for the current save to complete before changing dates.');
+                        return;
+                      }
+                      setDate(e.target.value);
+                    }}
+                    disabled={savingRef.current}
                     className="rounded-lg border border-gray-300 bg-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 flex-1 min-w-0"
                   />
                   <button
                     type="button"
-                    onClick={goToNextDay}
-                    disabled={date >= getTodayDate()}
+                    onClick={() => {
+                      if (savingRef.current) {
+                        alert('Please wait for the current save to complete before changing dates.');
+                        return;
+                      }
+                      goToNextDay();
+                    }}
+                    disabled={date >= getTodayDate() || savingRef.current}
                     className="rounded-lg border border-gray-300 bg-white p-1.5 sm:p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                     title="Next day"
                   >
@@ -556,7 +619,14 @@ export default function DashboardPage() {
                   {date !== getTodayDate() && (
                     <button
                       type="button"
-                      onClick={goToToday}
+                      onClick={() => {
+                        if (savingRef.current) {
+                          alert('Please wait for the current save to complete before changing dates.');
+                          return;
+                        }
+                        goToToday();
+                      }}
+                      disabled={savingRef.current}
                       className="rounded-lg border border-blue-300 bg-blue-50 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-blue-700 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 whitespace-nowrap flex-shrink-0"
                       title="Go to today"
                     >
@@ -607,6 +677,7 @@ export default function DashboardPage() {
           <DailyRecommendations 
             recommendations={recommendations} 
             loading={loadingRecommendations}
+            onFetchRecommendations={() => fetchRecommendations(foodLogs, activity, health)}
           />
         </div>
       </div>

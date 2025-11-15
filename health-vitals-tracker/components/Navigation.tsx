@@ -18,6 +18,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/dashboard', label: 'Daily Entry' },
     { href: '/weekly', label: 'Weekly Summary' },
+    { href: '/monthly', label: 'Monthly View' },
   ];
 
   const handleExportToExcel = async () => {

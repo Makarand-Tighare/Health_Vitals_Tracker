@@ -5,6 +5,7 @@ import { Recommendation } from '@/types';
 interface DailyRecommendationsProps {
   recommendations: Recommendation[];
   loading?: boolean;
+  onFetchRecommendations?: () => void;
 }
 
 const categoryColors = {
@@ -47,7 +48,7 @@ const parseRecommendation = (description: string) => {
   return { problem: description, improve: null };
 };
 
-export default function DailyRecommendations({ recommendations, loading }: DailyRecommendationsProps) {
+export default function DailyRecommendations({ recommendations, loading, onFetchRecommendations }: DailyRecommendationsProps) {
   if (loading) {
     return (
       <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -66,14 +67,50 @@ export default function DailyRecommendations({ recommendations, loading }: Daily
   }
 
   if (!recommendations || recommendations.length === 0) {
-    return null;
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">AI Recommendations</h3>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600">Get personalized suggestions</p>
+            </div>
+            {onFetchRecommendations && (
+              <button
+                onClick={onFetchRecommendations}
+                className="rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+              >
+                Get Recommendations
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="p-4 sm:p-6">
+          <div className="text-center py-6 sm:py-8">
+            <p className="text-sm sm:text-base text-gray-600 mb-4">No recommendations yet. Click the button above to get AI-powered suggestions.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
       <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900">AI Recommendations</h3>
-        <p className="mt-1 text-xs sm:text-sm text-gray-600">Personalized suggestions to improve your health</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">AI Recommendations</h3>
+            <p className="mt-1 text-xs sm:text-sm text-gray-600">Personalized suggestions to improve your health</p>
+          </div>
+          {onFetchRecommendations && (
+            <button
+              onClick={onFetchRecommendations}
+              className="rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap self-start sm:self-auto"
+            >
+              🔄 Refresh Recommendations
+            </button>
+          )}
+        </div>
       </div>
       <div className="p-4 sm:p-6">
         <div className="space-y-3 sm:space-y-4">

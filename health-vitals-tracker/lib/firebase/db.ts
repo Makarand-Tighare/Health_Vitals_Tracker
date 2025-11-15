@@ -41,25 +41,31 @@ function removeUndefined(obj: any): any {
 
 // Save or update daily entry
 export async function saveDailyEntry(entry: DailyEntry): Promise<void> {
-  const entryRef = doc(db, COLLECTIONS.entries, entry.id || `${entry.userId}_${entry.date}`);
+  const docId = entry.id || `${entry.userId}_${entry.date}`;
+  const entryRef = doc(db, COLLECTIONS.entries, docId);
+  
+  // Log what we're actually saving to Firestore
+  console.log(`[DB] Saving entry - Doc ID: ${docId}, Date: ${entry.date}, User ID: ${entry.userId}`);
   
   // Prepare entry data with proper timestamp conversion
   const entryData: any = {
-    id: entry.id || `${entry.userId}_${entry.date}`,
+    id: docId,
     userId: entry.userId,
     date: entry.date,
     foodLogs: entry.foodLogs || [],
     activity: entry.activity,
     health: entry.health,
     metrics: entry.metrics,
+    recommendations: entry.recommendations || [],
     createdAt: entry.createdAt ? Timestamp.fromDate(entry.createdAt) : Timestamp.now(),
     updatedAt: Timestamp.now(),
   };
 
-  // Remove all undefined values recursively
+  // Remove all undefined values recursively (but preserve 0, false, empty strings, etc.)
   const cleanEntry = removeUndefined(entryData);
 
   await setDoc(entryRef, cleanEntry, { merge: true });
+  console.log(`[DB] Successfully saved to document: ${docId}`);
 }
 
 // Get daily entry for a specific date
@@ -75,6 +81,22 @@ export async function getDailyEntry(
   }
 
   const data = entrySnap.data();
+  
+  // Debug: Log protein values when loading
+  if (data.foodLogs) {
+    data.foodLogs.forEach((log: any) => {
+      if (log.customFoods) {
+        log.customFoods.forEach((food: any) => {
+          if (food.protein !== undefined) {
+            console.log(`Loaded food ${food.name} with protein: ${food.protein}`);
+          } else {
+            console.log(`Loaded food ${food.name} WITHOUT protein`);
+          }
+        });
+      }
+    });
+  }
+  
   return {
     ...data,
     id: entrySnap.id,

@@ -74,13 +74,28 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
 
       // Update the food with new protein (and potentially updated calories)
       const meal = foodLogs.find(log => log.mealType === mealType);
+      
       const updatedCustomFoods = (meal?.customFoods || []).map(f => {
         if (f.id === foodId) {
-          return {
+          // Ensure protein is properly set (even if 0)
+          let newProtein: number | undefined = undefined;
+          if (data.protein !== undefined && data.protein !== null && !isNaN(Number(data.protein))) {
+            newProtein = parseFloat(data.protein);
+          } else if (f.protein !== undefined && f.protein !== null) {
+            newProtein = f.protein;
+          }
+          
+          const updatedFood: CustomFood = {
             ...f,
-            protein: data.protein ? parseFloat(data.protein) : f.protein,
             calories: data.calories ? Math.round(data.calories) : f.calories, // Update calories if provided
           };
+          
+          // Explicitly set protein if we have a value (including 0)
+          if (newProtein !== undefined && newProtein !== null) {
+            updatedFood.protein = newProtein;
+          }
+          
+          return updatedFood;
         }
         return f;
       });

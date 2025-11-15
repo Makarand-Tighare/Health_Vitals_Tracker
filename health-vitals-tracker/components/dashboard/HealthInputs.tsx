@@ -25,7 +25,7 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
       </div>
       <div className="p-4 sm:p-6">
       <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
-        <div>
+        <div className="min-w-0">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Sleep Time
           </label>
@@ -33,11 +33,12 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
             type="time"
             value={health.sleepTime}
             onChange={(e) => updateField('sleepTime', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full max-w-full rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            style={{ minWidth: 0 }}
           />
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Wake Time
           </label>
@@ -45,7 +46,8 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
             type="time"
             value={health.wakeTime}
             onChange={(e) => updateField('wakeTime', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            className="w-full max-w-full rounded-lg border border-gray-300 bg-white px-3 sm:px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            style={{ minWidth: 0 }}
           />
         </div>
 
@@ -63,19 +65,6 @@ export default function HealthInputsComponent({ health, onUpdate, calculatingQua
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Fruit Intake (servings)
-          </label>
-          <input
-            type="number"
-            value={health.fruitIntake || ''}
-            onChange={(e) => updateField('fruitIntake', Number(e.target.value))}
-            className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-            placeholder="0"
-            min="0"
-          />
-        </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-900 mb-2">

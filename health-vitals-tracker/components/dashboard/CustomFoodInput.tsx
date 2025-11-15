@@ -41,11 +41,12 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
       const age = Date.now() - cached.timestamp;
       if (age < CACHE_DURATION) {
         // Use cached value
+        const cachedProtein = cached.protein !== undefined && cached.protein !== null ? cached.protein : undefined;
         const customFood: CustomFood = {
           id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: foodName.trim(),
           calories: cached.calories,
-          protein: cached.protein,
+          protein: cachedProtein,
           amount: amount ? parseFloat(amount) : undefined,
           unit: unit,
           isCustom: true,
@@ -108,9 +109,10 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
       }
 
       // Cache the result
+      const proteinValue = data.protein !== undefined && data.protein !== null ? parseFloat(data.protein) : undefined;
       calorieCache.set(cacheKey, {
         calories: Math.round(data.calories),
-        protein: data.protein ? parseFloat(data.protein) : undefined,
+        protein: proteinValue,
         timestamp: Date.now(),
       });
 
@@ -119,7 +121,7 @@ export default function CustomFoodInput({ onAdd, mealType }: CustomFoodInputProp
           id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: foodName.trim(),
           calories: Math.round(data.calories),
-          protein: data.protein ? parseFloat(data.protein) : undefined,
+          protein: proteinValue,
           amount: amount ? parseFloat(amount) : undefined,
           unit: unit,
           isCustom: true,

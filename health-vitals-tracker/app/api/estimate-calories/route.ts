@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       console.error('Failed to parse AI response:', responseText);
       // Fallback: try to extract numbers
       const caloriesMatch = responseText.match(/["']?calories["']?\s*:\s*(\d+)/i);
-      const proteinMatch = responseText.match(/["']?protein["']?\s*:\s*(\d+)/i);
+      const proteinMatch = responseText.match(/["']?protein["']?\s*:\s*([\d.]+)/i);
       const calories = caloriesMatch ? parseInt(caloriesMatch[1]) : null;
       const protein = proteinMatch ? parseFloat(proteinMatch[1]) : null;
       
@@ -122,13 +122,13 @@ export async function POST(request: NextRequest) {
       
       return NextResponse.json({
         calories,
-        protein: protein && !isNaN(protein) ? protein : undefined,
+        protein: protein !== null && !isNaN(protein) ? protein : undefined,
         method: 'ai'
       });
     }
 
     const calories = result.calories ? parseInt(result.calories) : null;
-    const protein = result.protein ? parseFloat(result.protein) : undefined;
+    const protein = result.protein !== undefined && result.protein !== null ? parseFloat(result.protein) : undefined;
 
     if (!calories || isNaN(calories)) {
       return NextResponse.json(
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       calories,
-      protein: protein && !isNaN(protein) ? protein : undefined,
+      protein: protein !== undefined && !isNaN(protein) ? protein : undefined,
       method: 'ai'
     });
   } catch (error) {
