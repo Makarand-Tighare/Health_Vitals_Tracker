@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { DailyEntry, FoodLog, ActivityData, HealthInputs, FruitInsights, FoodGuidance, WeeklyRecommendationContext, Recommendation, CustomFood } from '@/types';
 import { calculateMetrics } from '@/lib/calculations';
-import { saveDailyEntry, getDailyEntry, getEntriesInRange } from '@/lib/firebase/db';
+import { saveDailyEntry, getDailyEntry, getEntriesInRange, deleteRecommendations } from '@/lib/firebase/db';
 import { analyzeFruitIntake, buildWeeklyContext } from '@/lib/insights';
 import DailyFoodLog from '@/components/dashboard/DailyFoodLog';
 import ActivityEntry from '@/components/dashboard/ActivityEntry';
@@ -168,6 +168,13 @@ export default function DashboardPage() {
     // Generate new recommendations
     try {
       setLoadingRecommendations(true);
+      
+      // Delete existing recommendations from database first
+      await deleteRecommendations(user.uid, date);
+      
+      // Clear recommendations from state
+      setRecommendations([]);
+      
       const metrics = calculateMetrics(currentFoodLogs, currentActivity);
       
       const entry: DailyEntry = {

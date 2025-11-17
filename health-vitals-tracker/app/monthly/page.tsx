@@ -107,7 +107,7 @@ export default function MonthlyPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
         <div className="text-lg text-gray-600">Loading...</div>
       </div>
     );
@@ -120,7 +120,7 @@ export default function MonthlyPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 py-4 sm:py-8">
         <div className="mx-auto max-w-6xl px-3 sm:px-4">
           <div className="mb-6 sm:mb-8">
             <div className="mb-4 sm:mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -134,7 +134,7 @@ export default function MonthlyPage() {
                   type="month"
                   value={monthStart.substring(0, 7)}
                   onChange={(e) => setMonthStart(e.target.value + '-01')}
-                  className="rounded-lg border border-gray-300 bg-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  className="rounded-lg border border-gray-300 bg-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
                 />
               </div>
             </div>
@@ -143,8 +143,8 @@ export default function MonthlyPage() {
           {summary ? (
             <div className="space-y-4 sm:space-y-6">
               {/* Calendar View */}
-              <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-                <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+              <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 shadow-sm">
+                <div className="border-b border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 px-4 sm:px-6 py-3 sm:py-4">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900">Calendar View</h3>
                   <p className="mt-1 text-xs sm:text-sm text-gray-600">Daily metrics at a glance</p>
                 </div>
@@ -210,7 +210,7 @@ export default function MonthlyPage() {
                                     {Math.round(entry.metrics.totalIntake)}/{Math.round(entry.metrics.totalBurn)}
                                   </div>
                                   {entry.metrics.totalProtein && (
-                                    <div className="text-blue-600 hidden sm:block font-medium">
+                                    <div className="text-orange-600 hidden sm:block font-medium">
                                       {Math.round(entry.metrics.totalProtein)}g
                                     </div>
                                   )}
@@ -247,7 +247,7 @@ export default function MonthlyPage() {
 
               {/* Overview Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
+                <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-4 sm:p-5 shadow-sm">
                   <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Days Tracked</div>
                   <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {summary.daysWithData}
@@ -255,7 +255,7 @@ export default function MonthlyPage() {
                   <div className="text-xs text-gray-500 mt-1">of {summary.totalDays} days</div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
+                <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-4 sm:p-5 shadow-sm">
                   <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Total Intake</div>
                   <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {formatNumber(summary.totalIntake)}
@@ -263,7 +263,7 @@ export default function MonthlyPage() {
                   <div className="text-xs text-gray-500 mt-1">kcal ({formatNumber(summary.averageIntake)} avg/day)</div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
+                <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-4 sm:p-5 shadow-sm">
                   <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Total Burn</div>
                   <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {formatNumber(summary.totalBurn)}
@@ -287,15 +287,15 @@ export default function MonthlyPage() {
               </div>
 
               {/* Detailed Metrics */}
-              <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-                <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+              <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 shadow-sm">
+                <div className="border-b border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 px-4 sm:px-6 py-3 sm:py-4">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900">Detailed Metrics</h3>
                 </div>
                 <div className="p-4 sm:p-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     <div>
                       <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Total Protein</div>
-                      <div className="text-xl sm:text-2xl font-bold text-blue-700">
+                      <div className="text-xl sm:text-2xl font-bold text-orange-700">
                         {formatNumber(summary.totalProtein, 1)}g
                       </div>
                       <div className="text-xs text-gray-500 mt-1">({formatNumber(summary.averageProtein, 1)}g avg/day)</div>
@@ -345,7 +345,7 @@ export default function MonthlyPage() {
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 text-center text-gray-600 shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 text-center text-gray-600 shadow-sm">
               No data available for this month.
             </div>
           )}

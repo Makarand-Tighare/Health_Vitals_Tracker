@@ -45,7 +45,7 @@ export default function WeeklyPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
         <div className="text-lg text-gray-600">Loading...</div>
       </div>
     );
@@ -58,7 +58,7 @@ export default function WeeklyPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 py-4 sm:py-8">
         <div className="mx-auto max-w-6xl px-3 sm:px-4">
           <div className="mb-6 sm:mb-8">
             <div className="mb-4 sm:mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -72,7 +72,7 @@ export default function WeeklyPage() {
                   type="date"
                   value={weekStart}
                   onChange={(e) => setWeekStart(e.target.value)}
-                  className="rounded-lg border border-gray-300 bg-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                  className="rounded-lg border border-gray-300 bg-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
                 />
               </div>
             </div>
@@ -81,7 +81,7 @@ export default function WeeklyPage() {
           {summary ? (
             <WeeklySummaryComponent summary={summary} />
           ) : (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 text-center text-gray-600 shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 text-center text-gray-600 shadow-sm">
               No data available for this week.
             </div>
           )}

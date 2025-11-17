@@ -5,9 +5,11 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  updateDoc,
   query,
   where,
   Timestamp,
+  deleteField,
 } from 'firebase/firestore';
 import { DailyEntry, WeeklySummary } from '@/types';
 
@@ -161,5 +163,21 @@ export async function getAllEntries(userId: string): Promise<DailyEntry[]> {
   
   // Sort by date
   return allEntries.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// Delete recommendations from a daily entry
+export async function deleteRecommendations(userId: string, date: string): Promise<void> {
+  const docId = `${userId}_${date}`;
+  const entryRef = doc(db, COLLECTIONS.entries, docId);
+  
+  try {
+    await updateDoc(entryRef, {
+      recommendations: deleteField(),
+    });
+    console.log(`[DB] Deleted recommendations from document: ${docId}`);
+  } catch (error) {
+    // If document doesn't exist, that's fine - nothing to delete
+    console.log(`[DB] Could not delete recommendations (document may not exist): ${docId}`);
+  }
 }
 
