@@ -41,7 +41,7 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="border-b border-gray-200 bg-white shadow-sm">
+    <nav className="border-b border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 shadow-sm">
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
         {/* Desktop Navigation */}
         <div className="hidden md:flex h-16 items-center justify-between gap-4">
@@ -56,8 +56,8 @@ export default function Navigation() {
                   href={item.href}
                   className={`rounded-lg px-4 py-2 text-sm font-medium transition-all whitespace-nowrap ${
                     pathname === item.href
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-orange-600 text-white'
+                      : 'text-gray-600 hover:bg-orange-50 hover:text-gray-900'
                   }`}
                 >
                   {item.label}
@@ -70,14 +70,14 @@ export default function Navigation() {
             <button
               onClick={handleExportToExcel}
               disabled={exporting}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="rounded-lg border border-orange-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-orange-50 hover:border-orange-300 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shadow-sm"
               title="Export all data to Excel"
             >
               {exporting ? 'Exporting...' : '📊 Export to Excel'}
             </button>
             <button
               onClick={logout}
-              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-200 hover:shadow-sm whitespace-nowrap"
+              className="rounded-lg bg-orange-100 px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-orange-200 hover:shadow-sm whitespace-nowrap"
             >
               Logout
             </button>
@@ -96,7 +96,7 @@ export default function Navigation() {
             </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="rounded-lg p-2 text-gray-600 hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
@@ -123,8 +123,8 @@ export default function Navigation() {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`block rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
                       pathname === item.href
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        ? 'bg-orange-600 text-white'
+                        : 'text-gray-600 hover:bg-orange-50 hover:text-gray-900'
                     }`}
                   >
                     {item.label}
@@ -145,7 +145,7 @@ export default function Navigation() {
                     setMobileMenuOpen(false);
                   }}
                   disabled={exporting}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full rounded-lg border border-orange-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-orange-50 hover:border-orange-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                 >
                   {exporting ? 'Exporting...' : '📊 Export to Excel'}
                 </button>
@@ -154,7 +154,7 @@ export default function Navigation() {
                     logout();
                     setMobileMenuOpen(false);
                   }}
-                  className="w-full rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-200"
+                  className="w-full rounded-lg bg-orange-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-orange-200"
                 >
                   Logout
                 </button>

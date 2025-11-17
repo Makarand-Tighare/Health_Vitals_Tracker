@@ -1,11 +1,12 @@
 'use client';
 
-import { Recommendation } from '@/types';
+import { Recommendation, WeeklyRecommendationContext } from '@/types';
 
 interface DailyRecommendationsProps {
   recommendations: Recommendation[];
   loading?: boolean;
   onFetchRecommendations?: () => void;
+  weeklyContext?: WeeklyRecommendationContext | null;
 }
 
 const categoryColors = {
@@ -48,17 +49,25 @@ const parseRecommendation = (description: string) => {
   return { problem: description, improve: null };
 };
 
-export default function DailyRecommendations({ recommendations, loading, onFetchRecommendations }: DailyRecommendationsProps) {
+const trendConfig = {
+  deficit: { label: 'Calorie Deficit', className: 'bg-green-100 text-green-800' },
+  balanced: { label: 'Balanced Week', className: 'bg-amber-100 text-amber-800' },
+  surplus: { label: 'Calorie Surplus', className: 'bg-rose-100 text-rose-800' },
+};
+
+const formatDeficit = (value: number) => (value >= 0 ? `+${value}` : `${value}`);
+
+export default function DailyRecommendations({ recommendations, loading, onFetchRecommendations, weeklyContext }: DailyRecommendationsProps) {
   if (loading) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+      <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 shadow-sm">
+        <div className="border-b border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 px-4 sm:px-6 py-3 sm:py-4">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900">AI Recommendations</h3>
           <p className="mt-1 text-xs sm:text-sm text-gray-600">Personalized suggestions to improve your health</p>
         </div>
         <div className="p-4 sm:p-6">
           <div className="flex items-center justify-center py-6 sm:py-8">
-            <div className="h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+            <div className="h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></div>
             <span className="ml-2 sm:ml-3 text-xs sm:text-sm text-gray-600">Analyzing your data...</span>
           </div>
         </div>
@@ -68,8 +77,8 @@ export default function DailyRecommendations({ recommendations, loading, onFetch
 
   if (!recommendations || recommendations.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+      <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 shadow-sm">
+        <div className="border-b border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-gray-900">AI Recommendations</h3>
@@ -78,7 +87,7 @@ export default function DailyRecommendations({ recommendations, loading, onFetch
             {onFetchRecommendations && (
               <button
                 onClick={onFetchRecommendations}
-                className="rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap"
+                className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 whitespace-nowrap shadow-sm"
               >
                 Get Recommendations
               </button>
@@ -95,8 +104,8 @@ export default function DailyRecommendations({ recommendations, loading, onFetch
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+    <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 shadow-sm">
+      <div className="border-b border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h3 className="text-base sm:text-lg font-semibold text-gray-900">AI Recommendations</h3>
@@ -105,12 +114,69 @@ export default function DailyRecommendations({ recommendations, loading, onFetch
           {onFetchRecommendations && (
             <button
               onClick={onFetchRecommendations}
-              className="rounded-lg bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap self-start sm:self-auto"
+              className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 whitespace-nowrap self-start sm:self-auto shadow-sm"
             >
               🔄 Refresh Recommendations
             </button>
           )}
         </div>
+        {weeklyContext && (
+          <div className="mt-4 rounded-xl border border-dashed border-orange-200 bg-orange-50/70 p-3 sm:p-4 space-y-3">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-orange-900">
+              <span className="font-semibold">{weeklyContext.rangeLabel}</span>
+              <span>· {weeklyContext.daysTracked}/7 days tracked</span>
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${trendConfig[weeklyContext.trend].className}`}>
+                {trendConfig[weeklyContext.trend].label}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="rounded-lg bg-white/80 p-3">
+                <p className="text-[11px] uppercase text-gray-500 font-semibold">Avg Intake vs Burn</p>
+                <p className="text-lg font-bold text-gray-900 mt-1">{Math.round(weeklyContext.averageIntake)} kcal</p>
+                <p className="text-sm text-orange-700">Burn {Math.round(weeklyContext.averageBurn)} kcal</p>
+              </div>
+              <div className="rounded-lg bg-white/80 p-3">
+                <p className="text-[11px] uppercase text-gray-500 font-semibold">Yesterday</p>
+                {weeklyContext.yesterday ? (
+                  <div className="mt-1">
+                    <p className="text-lg font-bold text-gray-900">{Math.round(weeklyContext.yesterday.intake)} kcal</p>
+                    <p className="text-sm text-gray-700">Δ {formatDeficit(Math.round(weeklyContext.yesterday.deficit))} kcal</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 mt-1">No data yet.</p>
+                )}
+              </div>
+              <div className="rounded-lg bg-white/80 p-3">
+                <p className="text-[11px] uppercase text-gray-500 font-semibold">Habits</p>
+                <p className="text-sm text-gray-700 mt-1">
+                  Water {weeklyContext.averageWater.toFixed(1)} glasses · Sleep {weeklyContext.averageSleep.toFixed(1)} hrs
+                </p>
+                {weeklyContext.missingHabits.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {weeklyContext.missingHabits.map((habit) => (
+                      <span key={habit} className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                        {habit}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2 overflow-x-auto">
+              {weeklyContext.timeline.map((day) => (
+                <div
+                  key={day.date}
+                  className="min-w-[90px] rounded-lg bg-white/80 px-3 py-2 text-center border border-orange-100"
+                >
+                  <p className="text-[11px] font-semibold text-orange-900">{new Date(day.date).toLocaleDateString(undefined, { weekday: 'short' })}</p>
+                  <p className={`text-sm font-bold ${day.deficit >= 0 ? 'text-green-700' : 'text-rose-600'}`}>
+                    {formatDeficit(Math.round(day.deficit))} kcal
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
       <div className="p-4 sm:p-6">
         <div className="space-y-3 sm:space-y-4">
@@ -119,7 +185,7 @@ export default function DailyRecommendations({ recommendations, loading, onFetch
             return (
               <div
                 key={index}
-                className={`rounded-lg border p-3 sm:p-4 ${categoryColors[rec.category] || categoryColors.Overall}`}
+                className={`rounded-lg border p-4 shadow-sm ${categoryColors[rec.category] || categoryColors.Overall}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">

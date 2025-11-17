@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { DailyEntry, FoodLog, ActivityData, HealthInputs } from '@/types';
+import { DailyEntry, FoodLog, ActivityData, HealthInputs, FruitInsights, FoodGuidance, WeeklyRecommendationContext, Recommendation, CustomFood } from '@/types';
 import { calculateMetrics } from '@/lib/calculations';
-import { saveDailyEntry, getDailyEntry } from '@/lib/firebase/db';
+import { saveDailyEntry, getDailyEntry, getEntriesInRange } from '@/lib/firebase/db';
+import { analyzeFruitIntake, buildWeeklyContext } from '@/lib/insights';
 import DailyFoodLog from '@/components/dashboard/DailyFoodLog';
 import ActivityEntry from '@/components/dashboard/ActivityEntry';
 import HealthInputsComponent from '@/components/dashboard/HealthInputs';
+import FoodGuidanceCard from '@/components/dashboard/FoodGuidance';
 import MetricsDisplay from '@/components/dashboard/MetricsDisplay';
 import DailyRecommendations from '@/components/dashboard/DailyRecommendations';
 import Navigation from '@/components/Navigation';
@@ -42,6 +43,7 @@ const defaultHealth: HealthInputs = {
   foodQualityScore: 3,
   faceStatus: 'normal',
   notes: '',
+  vegMode: false,
 };
 
 export default function DashboardPage() {
@@ -56,8 +58,19 @@ export default function DashboardPage() {
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | null>(null);
   const [calculatingQuality, setCalculatingQuality] = useState(false);
   const [foodQualityLastCalculated, setFoodQualityLastCalculated] = useState<Date | null>(null);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [fruitInsights, setFruitInsights] = useState<FruitInsights | null>(null);
+  const [aiFoodGuidance, setAiFoodGuidance] = useState<FoodGuidance | null>(null);
+  const [loadingFoodGuidance, setLoadingFoodGuidance] = useState(false);
+  const [foodGuidanceError, setFoodGuidanceError] = useState<string | null>(null);
+  const [weeklyContext, setWeeklyContext] = useState<WeeklyRecommendationContext | null>(null);
+  const [loadingWeeklyContext, setLoadingWeeklyContext] = useState(false);
+
+  const hasMealsLogged = useMemo(
+    () => foodLogs.some(log => log.customFoods && log.customFoods.length > 0),
+    [foodLogs]
+  );
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const qualityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const qualityAbortControllerRef = useRef<AbortController | null>(null);
@@ -73,18 +86,9 @@ export default function DashboardPage() {
       setDate(today);
       hasInitializedRef.current = true;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, authLoading]);
 
-  useEffect(() => {
-    if (user && !authLoading) {
-      // Reset timestamp when date changes
-      setFoodQualityLastCalculated(null);
-      loadEntry();
-    }
-  }, [user, date, authLoading]);
-
-  const loadEntry = async () => {
+  const loadEntry = useCallback(async () => {
     if (!user) return;
 
     // CRITICAL: Clear state FIRST before loading to prevent data mixing
@@ -130,14 +134,33 @@ export default function DashboardPage() {
           setFoodQualityLastCalculated(null);
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading entry:', error);
     } finally {
       if (currentEditDateRef.current === loadDate) {
         setLoading(false);
       }
     }
-  };
+  }, [user, date]);
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      // Reset timestamp when date changes
+      setFoodQualityLastCalculated(null);
+      loadEntry();
+    }
+  }, [user, date, authLoading, loadEntry]);
+
+  useEffect(() => {
+    setAiFoodGuidance(null);
+    setFoodGuidanceError(null);
+  }, [date]);
+
+  useEffect(() => {
+    if (!hasMealsLogged) {
+      setAiFoodGuidance(null);
+    }
+  }, [hasMealsLogged]);
 
   const fetchRecommendations = async (currentFoodLogs: FoodLog[], currentActivity: ActivityData, currentHealth: HealthInputs) => {
     if (!user) return;
@@ -195,12 +218,117 @@ export default function DashboardPage() {
           await saveDailyEntry(entry);
         }
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching recommendations:', error);
     } finally {
       setLoadingRecommendations(false);
     }
   };
+
+  const fetchFoodGuidance = async () => {
+    if (!user) return;
+    if (!hasMealsLogged) {
+      setFoodGuidanceError('Log at least one food item to unlock AI guidance.');
+      return;
+    }
+
+    try {
+      setLoadingFoodGuidance(true);
+      setFoodGuidanceError(null);
+      const metrics = calculateMetrics(foodLogs, activity);
+      const entry: DailyEntry = {
+        id: `${user.uid}_${date}`,
+        userId: user.uid,
+        date,
+        foodLogs,
+        activity,
+        health,
+        metrics,
+      };
+
+      const response = await fetch('/api/get-food-guidance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entry,
+          vegMode: health.vegMode || false,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          setFoodGuidanceError('AI guidance is cooling down. Please try again in a bit.');
+          return;
+        }
+        throw new Error('Failed to fetch AI guidance');
+      }
+
+      const data = await response.json();
+      if (data.guidance) {
+        setAiFoodGuidance(data.guidance);
+      } else {
+        setFoodGuidanceError('AI returned an empty response. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error fetching food guidance:', error);
+      setFoodGuidanceError('Unable to fetch AI guidance. Please try again.');
+    } finally {
+      setLoadingFoodGuidance(false);
+    }
+  };
+
+  useEffect(() => {
+    const derivedInsights = analyzeFruitIntake(foodLogs);
+    setFruitInsights(derivedInsights);
+
+    setHealth(prev => {
+      const detected = Number(derivedInsights.servings.toFixed(1));
+      const prevValue = typeof prev.fruitIntake === 'number' ? prev.fruitIntake : 0;
+      const current = Number(prevValue.toFixed(1));
+      if (detected === current) return prev;
+      return { ...prev, fruitIntake: detected };
+    });
+  }, [foodLogs]);
+
+  useEffect(() => {
+    if (!user) {
+      setWeeklyContext(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchContext = async () => {
+      setLoadingWeeklyContext(true);
+      try {
+        const endDate = date;
+        const start = new Date(date);
+        start.setDate(start.getDate() - 6);
+        const startDate = start.toISOString().split('T')[0];
+        const entries = await getEntriesInRange(user.uid, startDate, endDate);
+        if (!cancelled) {
+          setWeeklyContext(buildWeeklyContext(entries, endDate));
+        }
+      } catch (error: unknown) {
+        console.error('Error building weekly context:', error);
+        if (!cancelled) {
+          setWeeklyContext(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingWeeklyContext(false);
+        }
+      }
+    };
+
+    fetchContext();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, date]);
 
   const navigateDate = (days: number) => {
     const currentDate = new Date(date);
@@ -273,9 +401,12 @@ export default function DashboardPage() {
         }));
         setFoodQualityLastCalculated(new Date());
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Ignore abort errors
-      if (error.name === 'AbortError') {
+      if (
+        (error instanceof DOMException && error.name === 'AbortError') ||
+        (typeof error === 'object' && error !== null && 'name' in error && (error as { name?: string }).name === 'AbortError')
+      ) {
         return;
       }
       console.error('Error calculating food quality:', error);
@@ -319,7 +450,7 @@ export default function DashboardPage() {
         .map(log => {
           // Clean each custom food to remove undefined values
           const cleanedCustomFoods = log.customFoods!.map(food => {
-            const cleaned: any = {
+            const cleaned: CustomFood = {
               id: food.id,
               name: food.name,
               calories: food.calories,
@@ -374,7 +505,7 @@ export default function DashboardPage() {
         // Show a subtle notification
         setTimeout(() => setSaveStatus(null), 2000);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error saving entry:', error);
       setSaveStatus('unsaved');
       alert('Error saving entry. Please try again.');
@@ -412,8 +543,7 @@ export default function DashboardPage() {
         clearTimeout(qualityTimeoutRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [foodLogs]);
+  }, [foodLogs, user, loading]);
 
   // Load existing recommendations when date changes (but don't auto-generate)
   useEffect(() => {
@@ -428,14 +558,13 @@ export default function DashboardPage() {
         } else {
           setRecommendations([]);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error loading recommendations:', error);
         setRecommendations([]);
       }
     };
     
     loadExistingRecommendations();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date, user, loading]);
 
   // Auto-save when data changes (with debounce)
@@ -471,7 +600,7 @@ export default function DashboardPage() {
             .map(log => {
               // Clean each custom food to remove undefined values
               const cleanedCustomFoods = log.customFoods!.map(food => {
-                const cleaned: any = {
+                const cleaned: CustomFood = {
                   id: food.id,
                   name: food.name,
                   calories: food.calories,
@@ -519,7 +648,7 @@ export default function DashboardPage() {
           setLastSaved(new Date());
           setSaveStatus('saved');
           setTimeout(() => setSaveStatus(null), 1000);
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Auto-save error:', error);
           setSaveStatus('unsaved');
         } finally {
@@ -534,14 +663,13 @@ export default function DashboardPage() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [foodLogs, activity, health, date]);
+  }, [foodLogs, activity, health, date, user, loading, recommendations]);
 
   const metrics = calculateMetrics(foodLogs, activity);
 
   if (authLoading || loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
         <div className="text-lg text-gray-600">Loading...</div>
       </div>
     );
@@ -554,7 +682,7 @@ export default function DashboardPage() {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 py-4 sm:py-8">
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
         <div className="mb-6 sm:mb-8">
           <div className="mb-4 sm:mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -578,7 +706,7 @@ export default function DashboardPage() {
                       goToPreviousDay();
                     }}
                     disabled={savingRef.current}
-                    className="rounded-lg border border-gray-300 bg-white p-1.5 sm:p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 flex-shrink-0"
+                    className="rounded-lg border border-gray-300 bg-white p-1.5 sm:p-2 text-gray-600 shadow-sm transition-all hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 flex-shrink-0"
                     title="Previous day"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -597,7 +725,7 @@ export default function DashboardPage() {
                       setDate(e.target.value);
                     }}
                     disabled={savingRef.current}
-                    className="rounded-lg border border-gray-300 bg-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 flex-1 min-w-0"
+                    className="rounded-lg border border-gray-300 bg-white px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm shadow-sm transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 flex-1 min-w-0"
                   />
                   <button
                     type="button"
@@ -627,7 +755,7 @@ export default function DashboardPage() {
                         goToToday();
                       }}
                       disabled={savingRef.current}
-                      className="rounded-lg border border-blue-300 bg-blue-50 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-blue-700 shadow-sm transition-all hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 whitespace-nowrap flex-shrink-0"
+                      className="rounded-lg border border-orange-300 bg-orange-50 px-2 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-orange-700 shadow-sm transition-all hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 whitespace-nowrap flex-shrink-0"
                       title="Go to today"
                     >
                       Today
@@ -650,35 +778,45 @@ export default function DashboardPage() {
                 <button
                   onClick={() => handleSave(true)}
                   disabled={saving}
-                  className="rounded-lg bg-blue-600 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap ml-auto"
+                  className="rounded-lg bg-orange-600 px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md transition-all hover:bg-orange-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 whitespace-nowrap ml-auto"
                 >
                   {saving ? 'Saving...' : 'Save Entry'}
                 </button>
               </div>
             </div>
           </div>
-          <div className="rounded-lg bg-blue-50 border border-blue-100 px-3 sm:px-4 py-2 sm:py-3">
-            <p className="text-xs sm:text-sm text-blue-800">
+          <div className="rounded-lg bg-orange-50 border border-orange-100 px-3 sm:px-4 py-2 sm:py-3">
+            <p className="text-xs sm:text-sm text-orange-800">
               <span className="font-semibold">Note:</span> You can update your entries throughout the day. Changes are automatically saved 3 seconds after you stop editing.
             </p>
           </div>
         </div>
 
         <div className="space-y-4 sm:space-y-6 lg:space-y-8">
-          <DailyFoodLog foodLogs={foodLogs} onUpdate={setFoodLogs} />
-          <ActivityEntry activity={activity} onUpdate={setActivity} />
-          <HealthInputsComponent 
-            health={health} 
-            onUpdate={setHealth} 
-            calculatingQuality={calculatingQuality}
-            lastCalculated={foodQualityLastCalculated}
-          />
-          <MetricsDisplay metrics={metrics} />
-          <DailyRecommendations 
-            recommendations={recommendations} 
-            loading={loadingRecommendations}
-            onFetchRecommendations={() => fetchRecommendations(foodLogs, activity, health)}
-          />
+        <DailyFoodLog foodLogs={foodLogs} onUpdate={setFoodLogs} />
+        <ActivityEntry activity={activity} onUpdate={setActivity} />
+        <HealthInputsComponent 
+          health={health} 
+          onUpdate={setHealth} 
+          calculatingQuality={calculatingQuality}
+          lastCalculated={foodQualityLastCalculated}
+          fruitInsights={fruitInsights}
+        />
+        <FoodGuidanceCard
+          guidance={aiFoodGuidance}
+          loading={loadingFoodGuidance}
+          onFetchGuidance={hasMealsLogged ? fetchFoodGuidance : undefined}
+          disabled={!hasMealsLogged}
+          errorMessage={foodGuidanceError}
+          hasMeals={hasMealsLogged}
+        />
+        <MetricsDisplay metrics={metrics} />
+        <DailyRecommendations 
+          recommendations={recommendations} 
+          loading={loadingRecommendations}
+          onFetchRecommendations={() => fetchRecommendations(foodLogs, activity, health)}
+          weeklyContext={loadingWeeklyContext ? null : weeklyContext}
+        />
         </div>
       </div>
       </div>

@@ -101,9 +101,10 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
       });
 
       updateMeal(mealType, updatedCustomFoods);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error re-estimating protein:', error);
-      alert(error.message || 'Failed to re-estimate protein. Please try again.');
+      const message = error instanceof Error ? error.message : 'Failed to re-estimate protein. Please try again.';
+      alert(message);
     } finally {
       setReEstimating(prev => {
         const next = new Set(prev);
@@ -114,83 +115,81 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-200 bg-gray-50 px-4 sm:px-6 py-3 sm:py-4">
+    <div className="rounded-lg border border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 shadow-sm">
+      <div className="border-b border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 px-4 sm:px-6 py-3 sm:py-4">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900">Daily Food Log</h3>
         <p className="mt-1 text-xs sm:text-sm text-gray-600">Add foods with AI-powered calorie estimation</p>
       </div>
       <div className="p-4 sm:p-6">
-      <div className="space-y-4 sm:space-y-6">
-        {MEAL_TYPES.map(({ type, label }) => {
-          const customFoods = getMealCustomFoods(type);
-          return (
-            <div key={type}>
-              <label className="block text-sm font-semibold text-gray-900 mb-2 sm:mb-3">
-                {label}
-              </label>
-              
-              {customFoods.length > 0 && (
-                <div className="mb-2 sm:mb-3 flex flex-wrap gap-1.5 sm:gap-2">
-                  {customFoods.map((food) => (
-                    <span
-                      key={food.id}
-                      className="inline-flex items-center gap-1 sm:gap-1.5 rounded-md bg-blue-50 border border-blue-200 px-2 sm:px-3 py-1 sm:py-1.5 text-xs font-medium text-blue-700 max-w-full"
-                    >
-                      <span className="font-semibold truncate">{food.name}</span>
-                      {food.amount && (
-                        <span className="text-blue-600 whitespace-nowrap">
-                          ({food.amount} {food.unit})
-                        </span>
-                      )}
-                      <span className="ml-0.5 sm:ml-1 text-blue-600 font-semibold whitespace-nowrap">
-                        {food.calories} kcal
-                      </span>
-                      {food.protein !== undefined && (
-                        <span className="ml-0.5 sm:ml-1 text-green-600 font-medium whitespace-nowrap">
-                          {food.protein}g protein
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleReEstimate(type, food)}
-                        disabled={reEstimating.has(food.id)}
-                        className="ml-0.5 sm:ml-1 text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                        title="Re-estimate protein"
+        <div className="space-y-5 sm:space-y-6">
+          {MEAL_TYPES.map(({ type, label }) => {
+            const customFoods = getMealCustomFoods(type);
+            return (
+              <div key={type} className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-900">
+                  {label}
+                </label>
+                
+                {customFoods.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {customFoods.map((food) => (
+                      <div
+                        key={food.id}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-orange-200 px-3 py-1.5 text-xs shadow-sm"
                       >
-                        {reEstimating.has(food.id) ? (
-                          <svg className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        ) : (
-                          <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
+                        <span className="font-semibold text-gray-900 break-words">{food.name}</span>
+                        {food.amount && (
+                          <span className="text-gray-600 whitespace-nowrap">
+                            ({food.amount} {food.unit})
+                          </span>
                         )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCustomFood(type, food.id)}
-                        className="ml-0.5 sm:ml-1.5 text-blue-600 hover:text-blue-800 font-bold text-sm flex-shrink-0"
-                        title="Remove"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
+                        <span className="text-orange-600 font-semibold whitespace-nowrap">
+                          {food.calories} kcal
+                        </span>
+                        {food.protein !== undefined && (
+                          <span className="text-green-600 font-medium whitespace-nowrap">
+                            {food.protein}g protein
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleReEstimate(type, food)}
+                          disabled={reEstimating.has(food.id)}
+                          className="ml-1 text-orange-600 hover:text-orange-800 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transition-colors"
+                          title="Re-estimate protein"
+                        >
+                          {reEstimating.has(food.id) ? (
+                            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          ) : (
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCustomFood(type, food.id)}
+                          className="ml-1 text-red-500 hover:text-red-700 font-bold text-base leading-none transition-colors"
+                          title="Remove"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-              <CustomFoodInput
-                mealType={type}
-                onAdd={(food) => handleAddCustomFood(type, food)}
-              />
-            </div>
-          );
-        })}
-      </div>
+                <CustomFoodInput
+                  onAdd={(food) => handleAddCustomFood(type, food)}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 }
-

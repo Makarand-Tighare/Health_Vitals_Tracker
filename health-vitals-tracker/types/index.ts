@@ -49,6 +49,7 @@ export interface HealthInputs {
   foodQualityScore: number; // 1-5
   faceStatus: 'puffy' | 'dull' | 'normal' | 'bright';
   notes: string;
+  vegMode?: boolean; // If true, don't suggest non-vegetarian foods
 }
 
 // Calculated metrics
@@ -94,5 +95,57 @@ export interface WeeklySummary {
   averageFoodQuality: number;
   faceTrend: string; // Summary text
   notesSummary: string;
+}
+
+export interface FruitInsightMatch {
+  name: string;
+  servings: number;
+  mealType?: MealType;
+  confidence: 'high' | 'medium' | 'low';
+}
+
+export interface FruitInsights {
+  servings: number;
+  matches: FruitInsightMatch[];
+  detectedFoods: string[];
+}
+
+export interface FoodGuidanceItem {
+  title: string;
+  detail: string;
+  suggestions: string[];
+  emphasis?: string;
+}
+
+export interface FoodGuidance {
+  summary: {
+    totalProtein: number;
+    fruitServings: number;
+    mealsLogged: number;
+  };
+  eatMore: FoodGuidanceItem[];
+  limit: FoodGuidanceItem[];
+}
+
+export interface WeeklyContextDay {
+  date: string;
+  intake: number;
+  burn: number;
+  deficit: number;
+}
+
+export interface WeeklyRecommendationContext {
+  rangeLabel: string;
+  daysTracked: number;
+  averageIntake: number;
+  averageBurn: number;
+  averageWater: number;
+  averageSleep: number;
+  averageFoodQuality: number;
+  averageFruit: number;
+  trend: 'deficit' | 'balanced' | 'surplus';
+  timeline: WeeklyContextDay[];
+  yesterday?: WeeklyContextDay;
+  missingHabits: string[];
 }
 

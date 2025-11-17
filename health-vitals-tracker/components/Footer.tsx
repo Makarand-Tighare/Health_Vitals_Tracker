@@ -2,7 +2,7 @@
 
 export default function Footer() {
   return (
-    <footer className="border-t border-gray-200 bg-white py-4 sm:py-6 mt-auto">
+    <footer className="border-t border-gray-200 bg-gradient-to-br from-orange-50 via-white to-amber-50 py-4 sm:py-6 mt-auto">
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
         <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:justify-between">
           <p className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
@@ -11,7 +11,7 @@ export default function Footer() {
               href="https://www.linkedin.com/in/makarand-tighare/"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+              className="font-semibold text-orange-600 hover:text-orange-700 hover:underline transition-colors"
             >
               Mak
             </a>
