@@ -54,6 +54,12 @@ export async function POST(request: NextRequest) {
     }
     const sleepHours = sleepMinutes / 60;
 
+    // Check for vegetarian mode
+    const isVegMode = entry.health?.vegMode === true;
+    const vegModeNote = isVegMode
+      ? '\n\nCRITICAL: USER IS IN VEGETARIAN MODE. You MUST ONLY suggest vegetarian foods. NEVER recommend meat, fish, poultry, seafood, or any animal products. Only suggest plant-based proteins like paneer, tofu, dal, legumes, sprouts, chickpeas, beans, lentils, etc. If you mention protein sources, use ONLY vegetarian options.'
+      : '';
+
     const prompt = `You are a critical health coach analyzing daily food intake and lifestyle. Be direct, specific, and constructive about what went wrong and how to improve.
 
 Daily Data:
@@ -77,7 +83,7 @@ CRITICALLY ANALYZE:
 2. **Nutritional Imbalances**: Point out missing nutrients (protein, fiber, vitamins), excessive calories, or poor macro distribution.
 3. **Lifestyle Problems**: Identify issues with sleep duration/quality, hydration, exercise, or meal timing.
 4. **What Went Wrong**: Be specific about mistakes - e.g., "You ate too many processed snacks (X items), lacked protein (only Y grams), and had insufficient sleep (Z hours)."
-5. **How to Improve**: Provide concrete, actionable steps with specific food swaps, additions, or behavioral changes.
+5. **How to Improve**: Provide concrete, actionable steps with specific food swaps, additions, or behavioral changes.${isVegMode ? ' IMPORTANT: When suggesting protein sources or food additions, ONLY suggest vegetarian options like paneer, tofu, dal, legumes, sprouts, chickpeas, beans, lentils, nuts, seeds. NEVER suggest meat, fish, poultry, or seafood.' : ''}
 
 Provide recommendations in JSON format:
 {
@@ -94,9 +100,10 @@ Provide recommendations in JSON format:
 Requirements:
 - Be critical but constructive - point out real problems
 - Reference specific foods from their list when criticizing
-- Provide specific food replacements or additions (e.g., "Replace chips with almonds" or "Add 100g grilled chicken breast")
+- Provide specific food replacements or additions${isVegMode ? ' (ONLY vegetarian options - paneer, tofu, dal, legumes, sprouts, chickpeas, beans, lentils, etc. NO meat, fish, or poultry)' : ' (e.g., "Replace chips with almonds" or "Add 100g grilled chicken breast")'}
 - Focus on actionable, immediate changes
 - Prioritize issues that will have the biggest health impact
+${vegModeNote}
 
 Respond with ONLY the JSON object, no other text.`;
 
