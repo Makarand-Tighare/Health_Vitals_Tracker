@@ -15,6 +15,7 @@ export interface CustomFood {
   name: string;
   calories: number;
   protein?: number; // Protein in grams
+  sodium?: number; // Sodium in milligrams
   amount?: number;
   unit?: string;
   isCustom: true;
@@ -59,6 +60,7 @@ export interface CalculatedMetrics {
   calorieDeficit: number; // Burn - Intake
   trend: 'good' | 'moderate' | 'bad'; // Based on deficit
   totalProtein?: number; // Total protein in grams
+  totalSodium?: number; // Total sodium in milligrams
 }
 
 // AI Recommendation

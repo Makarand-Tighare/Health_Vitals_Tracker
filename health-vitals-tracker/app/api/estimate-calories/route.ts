@@ -21,12 +21,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = `Estimate the calories (in kcal) and protein (in grams) for ${amount || '1'} ${unit || 'serving'} of ${foodName}. 
-    Respond with ONLY a JSON object in this exact format:
-    {"calories": <number>, "protein": <number>}
-    
-    If the amount is not specified, assume 1 standard serving.
-    Provide only the JSON object, no other text.`;
+    const prompt = `You are a meticulous nutrition analyst. Estimate the TOTAL calories (kcal), protein (g), and sodium (mg) for a single adult portion described below.
+
+FOOD DESCRIPTION:
+"${foodName}"
+
+PORTION CONTEXT:
+- Logged amount/unit: ${amount || 'unspecified'} ${unit || 'serving'}
+- Treat the entire description as one full meal/plate for one adult unless quantities state otherwise.
+- If multiple foods are listed (e.g., "sprouts sabji, chole, dal, salad, 3 chapati, rice"), break them into components, respect explicit counts (like "3 chapati"), and sum the nutrients.
+- When quantities are missing, assume typical home-style Indian portions for one adult with moderate oil and salt usage (roughly 1-1.5g salt / 400-600mg sodium per cooked dish unless clearly high-sodium like pickles, packaged soups, instant noodles, processed meats).
+
+RESPONSE FORMAT (JSON only):
+{"calories": <number>, "protein": <number>, "sodium": <number>}
+
+RULES:
+- Always output sodium in milligrams (mg); when foods are home-made and no salty condiments are specified, keep sodium within realistic home-cooked ranges (350-900 mg per plate) unless ingredients justify more (e.g., pickles, soy sauce, packaged snacks).
+- Base estimates on reliable nutrition references/GI tables or verified FSSAI/USDA data.
+- Account for cooking mediums (oil, spices) implicitly but do not inflate sodium for ingredients that normally contribute fat/carbs instead of salt.
+- Never include explanatory text or markdown; output just the JSON object.`;
 
     // Retry logic for rate limits
     let response: Response | null = null;
@@ -110,8 +123,10 @@ export async function POST(request: NextRequest) {
       // Fallback: try to extract numbers
       const caloriesMatch = responseText.match(/["']?calories["']?\s*:\s*(\d+)/i);
       const proteinMatch = responseText.match(/["']?protein["']?\s*:\s*([\d.]+)/i);
+      const sodiumMatch = responseText.match(/["']?sodium["']?\s*:\s*([\d.]+)/i);
       const calories = caloriesMatch ? parseInt(caloriesMatch[1]) : null;
       const protein = proteinMatch ? parseFloat(proteinMatch[1]) : null;
+      const sodium = sodiumMatch ? parseFloat(sodiumMatch[1]) : null;
       
       if (!calories || isNaN(calories)) {
         return NextResponse.json(
@@ -123,12 +138,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         calories,
         protein: protein !== null && !isNaN(protein) ? protein : undefined,
+        sodium: sodium !== null && !isNaN(sodium) ? sodium : undefined,
         method: 'ai'
       });
     }
 
     const calories = result.calories ? parseInt(result.calories) : null;
     const protein = result.protein !== undefined && result.protein !== null ? parseFloat(result.protein) : undefined;
+    const sodium = result.sodium !== undefined && result.sodium !== null ? parseFloat(result.sodium) : undefined;
 
     if (!calories || isNaN(calories)) {
       return NextResponse.json(
@@ -140,6 +157,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       calories,
       protein: protein !== undefined && !isNaN(protein) ? protein : undefined,
+      sodium: sodium !== undefined && !isNaN(sodium) ? sodium : undefined,
       method: 'ai'
     });
   } catch (error) {

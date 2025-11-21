@@ -72,7 +72,7 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
         throw new Error(data.error);
       }
 
-      // Update the food with new protein (and potentially updated calories)
+      // Update the food with new protein/sodium (and potentially updated calories)
       const meal = foodLogs.find(log => log.mealType === mealType);
       
       const updatedCustomFoods = (meal?.customFoods || []).map(f => {
@@ -84,6 +84,13 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
           } else if (f.protein !== undefined && f.protein !== null) {
             newProtein = f.protein;
           }
+
+          let newSodium: number | undefined = undefined;
+          if (data.sodium !== undefined && data.sodium !== null && !isNaN(Number(data.sodium))) {
+            newSodium = parseFloat(data.sodium);
+          } else if (f.sodium !== undefined && f.sodium !== null) {
+            newSodium = f.sodium;
+          }
           
           const updatedFood: CustomFood = {
             ...f,
@@ -93,6 +100,10 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
           // Explicitly set protein if we have a value (including 0)
           if (newProtein !== undefined && newProtein !== null) {
             updatedFood.protein = newProtein;
+          }
+
+          if (newSodium !== undefined && newSodium !== null) {
+            updatedFood.sodium = newSodium;
           }
           
           return updatedFood;
@@ -149,6 +160,11 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
                         {food.protein !== undefined && (
                           <span className="text-green-600 font-medium whitespace-nowrap">
                             {food.protein}g protein
+                          </span>
+                        )}
+                        {food.sodium !== undefined && (
+                          <span className="text-blue-600 font-medium whitespace-nowrap">
+                            {food.sodium}mg sodium
                           </span>
                         )}
                         <button

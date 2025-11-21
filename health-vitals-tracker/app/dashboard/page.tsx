@@ -33,6 +33,8 @@ const defaultActivity: ActivityData = {
   },
 };
 
+const VEG_MODE_STORAGE_KEY = 'hv_veg_mode_pref';
+
 const defaultHealth: HealthInputs = {
   wakeTime: '07:00',
   sleepTime: '23:00',
@@ -44,6 +46,11 @@ const defaultHealth: HealthInputs = {
   faceStatus: 'normal',
   notes: '',
   vegMode: false,
+};
+
+const getStoredVegModePreference = () => {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(VEG_MODE_STORAGE_KEY) === 'true';
 };
 
 export default function DashboardPage() {
@@ -116,7 +123,7 @@ export default function DashboardPage() {
         if (currentEditDateRef.current === loadDate) {
           setFoodLogs(entry.foodLogs || []);
           setActivity(entry.activity || defaultActivity);
-          setHealth(entry.health || defaultHealth);
+          setHealth(entry.health || { ...defaultHealth, vegMode: entry.health?.vegMode ?? getStoredVegModePreference() });
           // Load recommendations if they exist
           if (entry.recommendations && entry.recommendations.length > 0) {
             setRecommendations(entry.recommendations);
@@ -129,7 +136,7 @@ export default function DashboardPage() {
         if (currentEditDateRef.current === loadDate) {
           setFoodLogs([]);
           setActivity(defaultActivity);
-          setHealth(defaultHealth);
+          setHealth({ ...defaultHealth, vegMode: getStoredVegModePreference() });
           setRecommendations([]);
           setFoodQualityLastCalculated(null);
         }
@@ -150,6 +157,11 @@ export default function DashboardPage() {
       loadEntry();
     }
   }, [user, date, authLoading, loadEntry]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(VEG_MODE_STORAGE_KEY, String(health.vegMode ?? false));
+  }, [health.vegMode]);
 
   useEffect(() => {
     setAiFoodGuidance(null);
@@ -479,6 +491,15 @@ export default function DashboardPage() {
                 }
               }
             }
+            if ('sodium' in food) {
+              const sodiumValue = food.sodium;
+              if (sodiumValue !== undefined && sodiumValue !== null) {
+                const numSodium = typeof sodiumValue === 'number' ? sodiumValue : Number(sodiumValue);
+                if (!isNaN(numSodium)) {
+                  cleaned.sodium = numSodium;
+                }
+              }
+            }
             return cleaned;
           });
           
@@ -626,6 +647,15 @@ export default function DashboardPage() {
                     const numProtein = typeof proteinValue === 'number' ? proteinValue : Number(proteinValue);
                     if (!isNaN(numProtein)) {
                       cleaned.protein = numProtein;
+                    }
+                  }
+                }
+                if ('sodium' in food) {
+                  const sodiumValue = food.sodium;
+                  if (sodiumValue !== undefined && sodiumValue !== null) {
+                    const numSodium = typeof sodiumValue === 'number' ? sodiumValue : Number(sodiumValue);
+                    if (!isNaN(numSodium)) {
+                      cleaned.sodium = numSodium;
                     }
                   }
                 }

@@ -67,6 +67,7 @@ Daily Data:
 - Total calorie intake: ${entry.metrics?.totalIntake || 0} kcal
 - Total calorie burn: ${entry.metrics?.totalBurn || 0} kcal
 - Calorie deficit: ${entry.metrics?.calorieDeficit || 0} kcal
+- Total sodium intake: ${entry.metrics?.totalSodium ?? 0} mg
 - Active calories: ${entry.activity?.activeCalories || 0} kcal
 - Resting calories: ${entry.activity?.restingCalories || 0} kcal
 - Workout time: ${entry.activity?.workoutTime?.strength || 0} min strength, ${entry.activity?.workoutTime?.cardio || 0} min cardio
@@ -84,6 +85,7 @@ CRITICALLY ANALYZE:
 3. **Lifestyle Problems**: Identify issues with sleep duration/quality, hydration, exercise, or meal timing.
 4. **What Went Wrong**: Be specific about mistakes - e.g., "You ate too many processed snacks (X items), lacked protein (only Y grams), and had insufficient sleep (Z hours)."
 5. **How to Improve**: Provide concrete, actionable steps with specific food swaps, additions, or behavioral changes.${isVegMode ? ' IMPORTANT: When suggesting protein sources or food additions, ONLY suggest vegetarian options like paneer, tofu, dal, legumes, sprouts, chickpeas, beans, lentils, nuts, seeds. NEVER suggest meat, fish, poultry, or seafood.' : ''}
+6. **Whole-Day Snapshot**: Start the recommendations array with one "Overall" item that summarizes the entire day (what went well + the biggest priority fix) before diving into specific Nutrition/Exercise/etc. tips.
 
 Provide recommendations in JSON format:
 {
@@ -99,6 +101,7 @@ Provide recommendations in JSON format:
 
 Requirements:
 - Be critical but constructive - point out real problems
+- The first recommendation MUST be category "Overall", summarizing the day with one sentence of praise followed by the top next action.
 - Reference specific foods from their list when criticizing
 - Provide specific food replacements or additions${isVegMode ? ' (ONLY vegetarian options - paneer, tofu, dal, legumes, sprouts, chickpeas, beans, lentils, etc. NO meat, fish, or poultry)' : ' (e.g., "Replace chips with almonds" or "Add 100g grilled chicken breast")'}
 - Focus on actionable, immediate changes

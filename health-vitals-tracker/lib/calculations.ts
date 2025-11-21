@@ -31,6 +31,21 @@ export function calculateTotalProtein(foodLogs: FoodLog[]): number {
   return Math.round(total * 10) / 10; // Round to 1 decimal place
 }
 
+// Calculate total sodium from food logs
+export function calculateTotalSodium(foodLogs: FoodLog[]): number {
+  let total = 0;
+  foodLogs.forEach(log => {
+    if (log.customFoods) {
+      log.customFoods.forEach(food => {
+        if (food.sodium !== undefined && food.sodium !== null) {
+          total += food.sodium;
+        }
+      });
+    }
+  });
+  return Math.round(total); // Sodium is typically tracked as whole milligrams
+}
+
 // Calculate total burn from activity data
 export function calculateTotalBurn(activity: ActivityData): number {
   return activity.activeCalories + activity.restingCalories;
@@ -58,6 +73,7 @@ export function calculateMetrics(
   const calorieDeficit = calculateDeficit(totalIntake, totalBurn);
   const trend = determineTrend(calorieDeficit);
   const totalProtein = calculateTotalProtein(foodLogs);
+  const totalSodium = calculateTotalSodium(foodLogs);
 
   return {
     totalIntake,
@@ -65,6 +81,7 @@ export function calculateMetrics(
     calorieDeficit,
     trend,
     totalProtein,
+    totalSodium,
   };
 }
 

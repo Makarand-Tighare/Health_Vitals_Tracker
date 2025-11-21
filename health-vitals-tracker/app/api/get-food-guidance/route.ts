@@ -140,6 +140,7 @@ DATA SNAPSHOT
 - Total intake: ${metrics.totalIntake || 0} kcal
 - Total burn: ${metrics.totalBurn || 0} kcal
 - Protein estimate: ${metrics.totalProtein || 'unknown'} g
+- Sodium estimate: ${metrics.totalSodium ?? 'unknown'} mg
 - Hydration: ${summary.waterIntake || 0} glasses
 - Fruit servings (auto): ${summary.fruitIntake || 0}
 - Face status: ${summary.faceStatus || 'normal'}
