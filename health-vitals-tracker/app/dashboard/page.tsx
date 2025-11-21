@@ -123,7 +123,10 @@ export default function DashboardPage() {
         if (currentEditDateRef.current === loadDate) {
           setFoodLogs(entry.foodLogs || []);
           setActivity(entry.activity || defaultActivity);
-          setHealth(entry.health || { ...defaultHealth, vegMode: entry.health?.vegMode ?? getStoredVegModePreference() });
+          const entryHealth = entry.health as HealthInputs | undefined;
+          const resolvedVegMode =
+            entryHealth?.vegMode ?? getStoredVegModePreference();
+          setHealth(entryHealth ? { ...entryHealth, vegMode: resolvedVegMode } : { ...defaultHealth, vegMode: resolvedVegMode });
           // Load recommendations if they exist
           if (entry.recommendations && entry.recommendations.length > 0) {
             setRecommendations(entry.recommendations);
@@ -500,6 +503,12 @@ export default function DashboardPage() {
                 }
               }
             }
+            if (food.note) {
+              const trimmedNote = String(food.note).trim();
+              if (trimmedNote) {
+                cleaned.note = trimmedNote;
+              }
+            }
             return cleaned;
           });
           
@@ -657,6 +666,12 @@ export default function DashboardPage() {
                     if (!isNaN(numSodium)) {
                       cleaned.sodium = numSodium;
                     }
+                  }
+                }
+                if (food.note) {
+                  const trimmedNote = String(food.note).trim();
+                  if (trimmedNote) {
+                    cleaned.note = trimmedNote;
                   }
                 }
                 return cleaned;

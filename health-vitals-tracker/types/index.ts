@@ -18,6 +18,7 @@ export interface CustomFood {
   sodium?: number; // Sodium in milligrams
   amount?: number;
   unit?: string;
+  note?: string; // Optional context provided by user
   isCustom: true;
 }
 

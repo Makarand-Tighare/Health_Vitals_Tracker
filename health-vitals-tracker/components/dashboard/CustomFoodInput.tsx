@@ -24,6 +24,7 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
   const [unit, setUnit] = useState('serving');
   const [isEstimating, setIsEstimating] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [note, setNote] = useState('');
   const [useLabel, setUseLabel] = useState(false);
   const [labelCaloriesPer100, setLabelCaloriesPer100] = useState('');
   const [labelProteinPer100, setLabelProteinPer100] = useState('');
@@ -41,6 +42,7 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
     setAmount('');
     setUnit('serving');
     setUseLabel(false);
+    setNote('');
     setLabelCaloriesPer100('');
     setLabelProteinPer100('');
     setLabelSodiumPer100('');
@@ -77,6 +79,8 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
       const protein = proteinRaw !== undefined ? Math.round(proteinRaw * 10) / 10 : undefined;
       const sodium = labelSodiumPer100 ? Math.round((grams * parseFloat(labelSodiumPer100)) / 100) : undefined;
 
+      const noteValue = note.trim() ? note.trim() : undefined;
+
       const customFood: CustomFood = {
         id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: foodName.trim(),
@@ -85,6 +89,7 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
         sodium,
         amount: grams,
         unit: unit,
+        note: noteValue,
         isCustom: true,
       };
 
@@ -106,6 +111,8 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
       if (age < CACHE_DURATION) {
         // Use cached value
         const cachedProtein = cached.protein !== undefined && cached.protein !== null ? cached.protein : undefined;
+        const noteValue = note.trim() ? note.trim() : undefined;
+
         const customFood: CustomFood = {
           id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: foodName.trim(),
@@ -114,6 +121,7 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
           sodium: cached.sodium,
           amount: amount ? parseFloat(amount) : undefined,
           unit: unit,
+          note: noteValue,
           isCustom: true,
         };
         onAdd(customFood);
@@ -181,6 +189,8 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
       });
 
       if (!abortController.signal.aborted) {
+        const noteValue = note.trim() ? note.trim() : undefined;
+
         const customFood: CustomFood = {
           id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name: foodName.trim(),
@@ -189,6 +199,7 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
           sodium: sodiumValue,
           amount: amount ? parseFloat(amount) : undefined,
           unit: unit,
+          note: noteValue,
           isCustom: true,
         };
 
@@ -341,6 +352,22 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
             </div>
           </div>
         )}
+
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+            Context / Note (optional)
+          </label>
+          <textarea
+            rows={2}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="e.g., Cheat meal, post-workout refuel, festival dinner..."
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 placeholder:text-gray-400 resize-none"
+          />
+          <p className="mt-1 text-[11px] text-gray-500">
+            Add a quick reason if this portion looks unusually high in calories or sodium.
+          </p>
+        </div>
 
         <div className="flex gap-2">
           <button

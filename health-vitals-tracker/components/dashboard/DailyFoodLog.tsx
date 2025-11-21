@@ -44,6 +44,27 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
     updateMeal(mealType, updatedCustomFoods);
   };
 
+  const handleUpdateNote = (mealType: MealType, food: CustomFood) => {
+    const existingNote = food.note || '';
+    const promptMessage = 'Add a short note for this meal (e.g., celebration dinner, post-workout, leftovers). Leave empty to remove.';
+    const result = window.prompt(promptMessage, existingNote);
+    if (result === null) return;
+    const trimmed = result.trim();
+
+    const meal = foodLogs.find(log => log.mealType === mealType);
+    const updatedCustomFoods = (meal?.customFoods || []).map(f => {
+      if (f.id === food.id) {
+        if (!trimmed) {
+          const { note, ...rest } = f;
+          return rest;
+        }
+        return { ...f, note: trimmed };
+      }
+      return f;
+    });
+    updateMeal(mealType, updatedCustomFoods);
+  };
+
   const handleReEstimate = async (mealType: MealType, food: CustomFood) => {
     const foodId = food.id;
     setReEstimating(prev => new Set(prev).add(foodId));
@@ -148,6 +169,11 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
                         key={food.id}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-orange-200 px-3 py-1.5 text-xs shadow-sm"
                       >
+                        {((food.calories ?? 0) >= 1000 || (food.sodium ?? 0) >= 1500) && (
+                          <span className="text-red-500 font-bold" title="Unusually high calories/sodium logged">
+                            !
+                          </span>
+                        )}
                         <span className="font-semibold text-gray-900 break-words">{food.name}</span>
                         {food.amount && (
                           <span className="text-gray-600 whitespace-nowrap">
@@ -166,6 +192,21 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
                           <span className="text-blue-600 font-medium whitespace-nowrap">
                             {food.sodium}mg sodium
                           </span>
+                        )}
+                        {food.note && (
+                          <span className="text-gray-600 italic break-words">
+                            “{food.note}”
+                          </span>
+                        )}
+                        {(((food.calories ?? 0) >= 1000 || (food.sodium ?? 0) >= 1500) || food.note) && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateNote(type, food)}
+                            className="text-gray-500 hover:text-gray-900 underline decoration-dotted decoration-gray-400"
+                            title={food.note ? 'Edit note' : 'Add context note'}
+                          >
+                            {food.note ? 'Edit note' : 'Add note'}
+                          </button>
                         )}
                         <button
                           type="button"
