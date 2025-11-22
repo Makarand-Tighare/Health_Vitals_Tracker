@@ -59,30 +59,56 @@ const tryFixJSON = (text: string): GuidanceResponse | null => {
 const normalizeGuidanceItem = (item: unknown): FoodGuidanceItem | null => {
   if (!item || typeof item !== 'object') return null;
   const candidate = item as { title?: unknown; detail?: unknown; suggestions?: unknown; emphasis?: unknown };
-  if (!candidate.title || !candidate.detail || !Array.isArray(candidate.suggestions)) {
+  
+  // Require at least title and detail
+  if (!candidate.title || !candidate.detail) {
     return null;
   }
+  
+  // Handle suggestions - can be array or missing
+  let suggestions: string[] = [];
+  if (Array.isArray(candidate.suggestions)) {
+    suggestions = candidate.suggestions.map((s: unknown) => String(s)).filter(Boolean);
+  } else if (candidate.suggestions) {
+    // If it's a single string, wrap it in array
+    suggestions = [String(candidate.suggestions)];
+  }
+  
+  // If no suggestions, provide a default
+  if (suggestions.length === 0) {
+    suggestions = ['Review your food choices'];
+  }
+  
   return {
     title: String(candidate.title),
     detail: String(candidate.detail),
-    suggestions: candidate.suggestions.map((s: unknown) => String(s)).filter(Boolean),
+    suggestions,
     emphasis: candidate.emphasis ? String(candidate.emphasis) : undefined,
   };
 };
 
 const normalizeGuidance = (payload: unknown): FoodGuidance | null => {
   if (!payload || typeof payload !== 'object') return null;
+  
+  // Try to find guidance object - it might be nested or at root
   const container = payload as {
     guidance?: {
       summary?: { totalProtein?: unknown; fruitServings?: unknown; mealsLogged?: unknown };
       eatMore?: unknown;
       limit?: unknown;
     };
+    summary?: { totalProtein?: unknown; fruitServings?: unknown; mealsLogged?: unknown };
+    eatMore?: unknown;
+    limit?: unknown;
   };
-  if (!container.guidance) return null;
-  const summary = container.guidance.summary || {};
-  const eatMoreRaw = Array.isArray(container.guidance.eatMore) ? container.guidance.eatMore : [];
-  const limitRaw = Array.isArray(container.guidance.limit) ? container.guidance.limit : [];
+  
+  // If guidance is nested, use it; otherwise try root level
+  const guidanceData = container.guidance || container;
+  if (!guidanceData || typeof guidanceData !== 'object') return null;
+  
+  const summary = (guidanceData as any).summary || {};
+  const eatMoreRaw = Array.isArray((guidanceData as any).eatMore) ? (guidanceData as any).eatMore : [];
+  const limitRaw = Array.isArray((guidanceData as any).limit) ? (guidanceData as any).limit : [];
 
   const eatMore = eatMoreRaw
     .map(normalizeGuidanceItem)
@@ -92,8 +118,7 @@ const normalizeGuidance = (payload: unknown): FoodGuidance | null => {
     .map(normalizeGuidanceItem)
     .filter((item): item is FoodGuidanceItem => Boolean(item));
 
-  if (!eatMore.length && !limit.length) return null;
-
+  // Allow empty arrays - return guidance even if no items (better than null)
   return {
     summary: {
       totalProtein: safeNumber(summary.totalProtein),
@@ -151,30 +176,44 @@ TASK
 2. Identify 2-3 things to pause/limit (fried, sugar, refined carbs, overeating, missing meals) referencing the actual foods.
 3. Keep guidance hyper-specific with portion ideas or swaps (e.g., "Add 80g grilled paneer at lunch", "Swap poori for phulka + dal").
 4. ${isVegMode ? 'ONLY suggest vegetarian options. Never recommend meat, fish, or poultry.' : ''}
-5. Respect the JSON schema below. Do not include markdown, commentary, or extra keys.
+5. Count meals logged from the food list above.
 
-Respond with JSON:
+CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no code blocks, no explanations before or after. Start directly with { and end with }.
+
+Required JSON format (use exact structure):
 {
   "guidance": {
     "summary": {
-      "totalProtein": number,
-      "fruitServings": number,
-      "mealsLogged": number
+      "totalProtein": <number>,
+      "fruitServings": <number>,
+      "mealsLogged": <number>
     },
     "eatMore": [
-      { "title": string, "detail": string, "suggestions": [string, ...], "emphasis": string? }
+      {
+        "title": "<string, max 7 words>",
+        "detail": "<string referencing specific foods from log>",
+        "suggestions": ["<actionable tactic 1>", "<actionable tactic 2>"],
+        "emphasis": "<optional string>"
+      }
     ],
     "limit": [
-      { "title": string, "detail": string, "suggestions": [string, ...], "emphasis": string? }
+      {
+        "title": "<string, max 7 words>",
+        "detail": "<string referencing specific foods from log>",
+        "suggestions": ["<actionable tactic 1>", "<actionable tactic 2>"],
+        "emphasis": "<optional string>"
+      }
     ]
   }
 }
 
 Rules:
-- Title <= 7 words.
-- Detail references concrete foods from the log.
+- Title must be <= 7 words.
+- Detail must reference concrete foods from the log.
 - Suggestions must be actionable tactics (food swap, portion, timing).
-- If no data is available, give generally healthy defaults but keep JSON structure identical.`;
+- If no data is available, return empty arrays but keep JSON structure identical.
+- Return 2-3 items in eatMore and 2-3 items in limit arrays.
+- Ensure all strings are properly escaped in JSON.`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
@@ -190,8 +229,8 @@ Rules:
             }],
           }],
           generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 800,
+            temperature: 0.3,
+            maxOutputTokens: 1200,
           },
         }),
       }
@@ -214,17 +253,53 @@ Rules:
 
     const data = await response.json();
     let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    
+    if (!responseText) {
+      console.warn('AI returned empty response. Falling back to empty state.');
+      return NextResponse.json({ guidance: emptyGuidance });
+    }
+    
+    // Clean up markdown code blocks
     responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    
+    // Try to find and extract JSON
+    let parsed: GuidanceResponse | null = null;
+    
+    // First try: direct parse
+    parsed = tryFixJSON(responseText);
+    
+    // Second try: find JSON object in text
+    if (!parsed) {
+      const jsonStart = responseText.indexOf('{');
+      if (jsonStart !== -1) {
+        parsed = tryFixJSON(responseText.substring(jsonStart));
+      }
+    }
+    
+    // Third try: try to fix common JSON issues
+    if (!parsed && responseText.includes('guidance')) {
+      // Try to extract just the guidance object
+      const guidanceMatch = responseText.match(/"guidance"\s*:\s*\{[\s\S]*\}/);
+      if (guidanceMatch) {
+        try {
+          const fixed = `{${guidanceMatch[0]}}`;
+          parsed = JSON.parse(fixed);
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }
 
-    const parsed =
-      tryFixJSON(responseText) ||
-      tryFixJSON(responseText.substring(responseText.indexOf('{'))) ||
-      null;
+    if (!parsed) {
+      console.warn('AI returned unusable guidance. Response text:', responseText.substring(0, 500));
+      console.warn('Full response:', responseText);
+      return NextResponse.json({ guidance: emptyGuidance });
+    }
 
     const normalized = normalizeGuidance(parsed);
 
     if (!normalized) {
-      console.warn('AI returned unusable guidance. Falling back to empty state.');
+      console.warn('AI response could not be normalized. Parsed data:', JSON.stringify(parsed, null, 2));
       return NextResponse.json({ guidance: emptyGuidance });
     }
 
