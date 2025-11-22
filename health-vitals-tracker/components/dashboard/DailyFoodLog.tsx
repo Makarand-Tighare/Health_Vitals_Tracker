@@ -163,77 +163,91 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
                 </label>
                 
                 {customFoods.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-2">
                     {customFoods.map((food) => (
                       <div
                         key={food.id}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-orange-200 px-3 py-1.5 text-xs shadow-sm"
+                        className="rounded-lg bg-white border border-orange-200 p-3 shadow-sm"
                       >
-                        {((food.calories ?? 0) >= 1000 || (food.sodium ?? 0) >= 1500) && (
-                          <span className="text-red-500 font-bold" title="Unusually high calories/sodium logged">
-                            !
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {((food.calories ?? 0) >= 1000 || (food.sodium ?? 0) >= 1500) && (
+                                <span className="text-red-500 font-bold flex-shrink-0" title="Unusually high calories/sodium logged">
+                                  !
+                                </span>
+                              )}
+                              <span className="font-semibold text-gray-900 break-words">{food.name}</span>
+                              {food.amount && (
+                                <span className="text-gray-600 text-xs whitespace-nowrap">
+                                  ({food.amount} {food.unit})
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleReEstimate(type, food)}
+                              disabled={reEstimating.has(food.id)}
+                              className="text-orange-600 hover:text-orange-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors p-1"
+                              title="Re-estimate"
+                            >
+                              {reEstimating.has(food.id) ? (
+                                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCustomFood(type, food.id)}
+                              className="text-red-500 hover:text-red-700 font-bold text-lg leading-none transition-colors p-1"
+                              title="Remove"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+                          <span className="text-orange-600 font-semibold">
+                            {food.calories} kcal
                           </span>
-                        )}
-                        <span className="font-semibold text-gray-900 break-words">{food.name}</span>
-                        {food.amount && (
-                          <span className="text-gray-600 whitespace-nowrap">
-                            ({food.amount} {food.unit})
-                          </span>
-                        )}
-                        <span className="text-orange-600 font-semibold whitespace-nowrap">
-                          {food.calories} kcal
-                        </span>
-                        {food.protein !== undefined && (
-                          <span className="text-green-600 font-medium whitespace-nowrap">
-                            {food.protein}g protein
-                          </span>
-                        )}
-                        {food.sodium !== undefined && (
-                          <span className="text-blue-600 font-medium whitespace-nowrap">
-                            {food.sodium}mg sodium
-                          </span>
-                        )}
+                          {food.protein !== undefined && (
+                            <span className="text-green-600 font-medium">
+                              {food.protein}g protein
+                            </span>
+                          )}
+                          {food.sodium !== undefined && (
+                            <span className="text-blue-600 font-medium">
+                              {food.sodium}mg sodium
+                            </span>
+                          )}
+                        </div>
                         {food.note && (
-                          <span className="text-gray-600 italic break-words">
-                            “{food.note}”
-                          </span>
+                          <div className="mt-2 pt-2 border-t border-gray-200">
+                            <p className="text-xs text-gray-600 italic break-words">
+                              "{food.note}"
+                            </p>
+                          </div>
                         )}
                         {(((food.calories ?? 0) >= 1000 || (food.sodium ?? 0) >= 1500) || food.note) && (
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateNote(type, food)}
-                            className="text-gray-500 hover:text-gray-900 underline decoration-dotted decoration-gray-400"
-                            title={food.note ? 'Edit note' : 'Add context note'}
-                          >
-                            {food.note ? 'Edit note' : 'Add note'}
-                          </button>
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateNote(type, food)}
+                              className="text-xs text-gray-500 hover:text-gray-900 underline decoration-dotted decoration-gray-400"
+                              title={food.note ? 'Edit note' : 'Add context note'}
+                            >
+                              {food.note ? 'Edit note' : 'Add note'}
+                            </button>
+                          </div>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => handleReEstimate(type, food)}
-                          disabled={reEstimating.has(food.id)}
-                          className="ml-1 text-orange-600 hover:text-orange-800 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transition-colors"
-                          title="Re-estimate protein"
-                        >
-                          {reEstimating.has(food.id) ? (
-                            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                          ) : (
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveCustomFood(type, food.id)}
-                          className="ml-1 text-red-500 hover:text-red-700 font-bold text-base leading-none transition-colors"
-                          title="Remove"
-                        >
-                          ×
-                        </button>
                       </div>
                     ))}
                   </div>

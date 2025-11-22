@@ -310,7 +310,7 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
 
         {useLabel && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Calories / 100g (kcal)
               </label>
@@ -323,7 +323,7 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Protein / 100g (g)
               </label>
@@ -337,7 +337,7 @@ export default function CustomFoodInput({ onAdd }: CustomFoodInputProps) {
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-all focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1"
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                 Sodium / 100g (mg)
               </label>
