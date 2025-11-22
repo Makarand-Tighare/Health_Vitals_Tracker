@@ -112,11 +112,11 @@ const normalizeGuidance = (payload: unknown): FoodGuidance | null => {
 
   const eatMore = eatMoreRaw
     .map(normalizeGuidanceItem)
-    .filter((item): item is FoodGuidanceItem => Boolean(item));
+    .filter((item: FoodGuidanceItem | null): item is FoodGuidanceItem => Boolean(item));
 
   const limit = limitRaw
     .map(normalizeGuidanceItem)
-    .filter((item): item is FoodGuidanceItem => Boolean(item));
+    .filter((item: FoodGuidanceItem | null): item is FoodGuidanceItem => Boolean(item));
 
   // Allow empty arrays - return guidance even if no items (better than null)
   return {
