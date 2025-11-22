@@ -23,23 +23,29 @@ export async function POST(request: NextRequest) {
 
     const prompt = `You are a meticulous nutrition analyst. Estimate the TOTAL calories (kcal), protein (g), and sodium (mg) for a single adult portion described below.
 
-FOOD DESCRIPTION:
-"${foodName}"
+FOOD DESCRIPTION: "${foodName}"
 
 PORTION CONTEXT:
 - Logged amount/unit: ${amount || 'unspecified'} ${unit || 'serving'}
-- Treat the entire description as one full meal/plate for one adult unless quantities state otherwise.
-- If multiple foods are listed (e.g., "sprouts sabji, chole, dal, salad, 3 chapati, rice"), break them into components, respect explicit counts (like "3 chapati"), and sum the nutrients.
-- When quantities are missing, assume typical home-style Indian portions for one adult with moderate oil and salt usage (roughly 1-1.5g salt / 400-600mg sodium per cooked dish unless clearly high-sodium like pickles, packaged soups, instant noodles, processed meats).
+- Treat the ENTIRE description as ONE full meal for ONE adult unless explicit quantities state otherwise.
+- If multiple foods are listed, break them into components, respect explicit counts (e.g., "2 chapati", "1 bowl dal"), and sum all nutrients.
+- If quantity is missing, assume **typical Indian home-style serving sizes** with **moderate oil and salt**.
+- Use **minimum realistic estimates** from known nutrition tables (USDA, FSSAI, Indian Food Composition Tables).
 
-RESPONSE FORMAT (JSON only):
+NUTRITION RULES:
+- Calories: Use realistic home-cooked estimates; avoid restaurant-level calories unless explicitly stated.
+- Protein: Use true food-based protein values; do NOT inflate.
+- Sodium: ALWAYS output in mg.  
+  - Home-cooked foods (sabzi, dal, roti, rice, plain curries): **350–900 mg TOTAL sodium for the whole meal** unless clearly high-sodium items are present.  
+  - Increase sodium ONLY if ingredients justify it (e.g., pickles, papad, soy sauce, instant noodles, packaged foods).
+  - Do NOT add sodium for ingredients that don’t normally contribute salt (oil, spices, wheat flour, rice, vegetables).
+
+OUTPUT FORMAT (JSON ONLY):
 {"calories": <number>, "protein": <number>, "sodium": <number>}
 
-RULES:
-- Always output sodium in milligrams (mg); when foods are home-made and no salty condiments are specified, keep sodium within realistic home-cooked ranges (350-900 mg per plate) unless ingredients justify more (e.g., pickles, soy sauce, packaged snacks).
-- Base estimates on reliable nutrition references/GI tables or verified FSSAI/USDA data.
-- Account for cooking mediums (oil, spices) implicitly but do not inflate sodium for ingredients that normally contribute fat/carbs instead of salt.
-- Never include explanatory text or markdown; output just the JSON object.`;
+RESPONSE RULES:
+- No explanations, no markdown; output the JSON object ONLY.`;
+
 
     // Retry logic for rate limits
     let response: Response | null = null;
