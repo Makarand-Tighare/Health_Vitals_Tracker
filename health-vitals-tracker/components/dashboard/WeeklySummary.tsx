@@ -71,6 +71,42 @@ export default function WeeklySummary({ summary }: WeeklySummaryProps) {
         </div>
       </div>
 
+      {summary.wins.length > 0 && (
+        <div className="mt-4 sm:mt-6">
+          <h4 className="text-sm font-semibold text-green-800 mb-3">What Went Well</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {summary.wins.map((item, index) => (
+              <div
+                key={`${item.metric}-${index}`}
+                className="rounded-lg border border-green-100 bg-white p-4 shadow-sm"
+              >
+                <div className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-1">{item.metric}</div>
+                <div className="text-base font-semibold text-gray-900">{item.title}</div>
+                <p className="mt-1 text-sm text-gray-700">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {summary.focus.length > 0 && (
+        <div className="mt-4 sm:mt-6">
+          <h4 className="text-sm font-semibold text-red-800 mb-3">Needs Attention</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {summary.focus.map((item, index) => (
+              <div
+                key={`${item.metric}-${index}`}
+                className="rounded-lg border border-red-100 bg-white p-4 shadow-sm"
+              >
+                <div className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-1">{item.metric}</div>
+                <div className="text-base font-semibold text-gray-900">{item.title}</div>
+                <p className="mt-1 text-sm text-gray-700">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {summary.faceTrend && (
         <div className="mt-4 sm:mt-6 rounded-lg border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
           <div className="text-xs sm:text-sm font-semibold text-gray-900 mb-2">Face Trend</div>

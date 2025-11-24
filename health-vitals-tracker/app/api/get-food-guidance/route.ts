@@ -261,7 +261,7 @@ Rules:
     
     // Clean up markdown code blocks
     responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
-    
+
     // Try to find and extract JSON
     let parsed: GuidanceResponse | null = null;
     

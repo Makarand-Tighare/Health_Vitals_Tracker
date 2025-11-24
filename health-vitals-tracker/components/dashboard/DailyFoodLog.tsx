@@ -177,41 +177,41 @@ export default function DailyFoodLog({ foodLogs, onUpdate }: DailyFoodLogProps) 
                                   !
                                 </span>
                               )}
-                              <span className="font-semibold text-gray-900 break-words">{food.name}</span>
-                              {food.amount && (
+                        <span className="font-semibold text-gray-900 break-words">{food.name}</span>
+                        {food.amount && (
                                 <span className="text-gray-600 text-xs whitespace-nowrap">
-                                  ({food.amount} {food.unit})
-                                </span>
-                              )}
+                            ({food.amount} {food.unit})
+                          </span>
+                        )}
                             </div>
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => handleReEstimate(type, food)}
-                              disabled={reEstimating.has(food.id)}
+                        <button
+                          type="button"
+                          onClick={() => handleReEstimate(type, food)}
+                          disabled={reEstimating.has(food.id)}
                               className="text-orange-600 hover:text-orange-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors p-1"
                               title="Re-estimate"
-                            >
-                              {reEstimating.has(food.id) ? (
-                                <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              ) : (
-                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveCustomFood(type, food.id)}
+                        >
+                          {reEstimating.has(food.id) ? (
+                            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          ) : (
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCustomFood(type, food.id)}
                               className="text-red-500 hover:text-red-700 font-bold text-lg leading-none transition-colors p-1"
-                              title="Remove"
-                            >
-                              ×
-                            </button>
+                          title="Remove"
+                        >
+                          ×
+                        </button>
                           </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">

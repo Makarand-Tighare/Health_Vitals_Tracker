@@ -98,6 +98,15 @@ export interface WeeklySummary {
   averageFoodQuality: number;
   faceTrend: string; // Summary text
   notesSummary: string;
+  wins: WeeklyHighlight[];
+  focus: WeeklyHighlight[];
+}
+
+export interface WeeklyHighlight {
+  title: string;
+  description: string;
+  metric: string;
+  trend: 'positive' | 'negative';
 }
 
 export interface FruitInsightMatch {

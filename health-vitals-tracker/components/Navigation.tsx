@@ -19,6 +19,7 @@ export default function Navigation() {
     { href: '/dashboard', label: 'Daily Entry' },
     { href: '/weekly', label: 'Weekly Summary' },
     { href: '/monthly', label: 'Monthly View' },
+    { href: '/skincare', label: 'Skincare' },
   ];
 
   const handleExportToExcel = async () => {
